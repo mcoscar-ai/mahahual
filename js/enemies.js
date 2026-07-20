@@ -90,18 +90,18 @@ function updateEnemies() {
     }
 
     if (e.type === 'caminhao') {
-      // segue sempre reto na mesma direção (definida uma vez, na primeira vez que
-      // aparece perto da Kiara) — não fica "mirando" nela, é um obstáculo que atravessa.
+      // segue sempre reto na mesma direção (definida uma vez) — obstáculo que atravessa.
       if (e.truckDirSet !== true) {
         e.dir = (P.x - e.x) >= 0 ? 1 : -1;
         e.truckDirSet = true;
       }
       e.x += cfg.speed * e.dir;
+    } else if (e.leaving) {
+      // JÁ TOCOU a Kiara: segue o caminho reto pra sempre, nunca mais volta.
+      e.x += cfg.speed * e.dir;
+      if (Math.abs(P.x - e.x) > 2500) e.removed = true; // some de vez quando longe
     } else {
-      // Só re-mira na Kiara quando está LONGE. Quando chega perto, trava a
-      // direção atual e ATRAVESSA, seguindo o rumo — nunca para em cima dela.
-      // (Isso elimina o loop eterno de tontura: depois de encostar, ele passa
-      // direto, se afasta, e só então pode dar meia-volta pra outra investida.)
+      // Ainda não tocou: persegue. Re-mira só quando longe; perto, trava e atravessa.
       var RETARGET_DISTANCE = 160;
       var distToPlayer = P.x - e.x;
       if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
@@ -209,6 +209,7 @@ function checkPlayerCollision(e, cfg) {
 
   if (pRight > eLeft && pLeft < eRight && pBottom > eTop && pTop < eBottom) {
     playerGetHit();
+    e.leaving = true; // tocou → segue o caminho reto pra sempre, nunca mais volta
   }
 }
 
