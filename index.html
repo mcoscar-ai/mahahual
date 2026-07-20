@@ -34,9 +34,11 @@
 
   <canvas id="testCanvas" style="background:#8ecf6f; display:block; margin:20px auto; max-width:100%; touch-action:none;"></canvas>
   <script src="js/player.js"></script>
+  <script src="js/enemies.js"></script>
   <script>
     var canvas = document.getElementById('testCanvas');
     var ctx = canvas.getContext('2d');
+    var enemiesSpawned = false;
 
     function resizeTestCanvas() {
       var w = Math.min(window.innerWidth - 40, 800); // -40 = padding do body (20px cada lado)
@@ -44,15 +46,20 @@
       canvas.height = w * 0.75; // mantém proporção 4:3
       GROUND_Y = canvas.height - 40; // chão perto da base do canvas visível
       P.y = GROUND_Y;
+
+      if (!enemiesSpawned) {
+        spawnEnemy('bulldozer', canvas.width * 0.40, GROUND_Y);
+        spawnEnemy('caminhao',  canvas.width * 0.62, GROUND_Y);
+        spawnEnemy('drone',     canvas.width * 0.80, GROUND_Y);
+        spawnEnemy('robot',     canvas.width * 0.95, GROUND_Y);
+        enemiesSpawned = true;
+      }
     }
     resizeTestCanvas();
     window.addEventListener('resize', resizeTestCanvas);
 
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      var truck = IMAGES['caminhao_move_01'];
-      var truckDims = drawSprite(ctx, truck, canvas.width * 0.7, GROUND_Y, SPRITE_TARGET_HEIGHT.truck, 1, 0);
 
       var maxJumpHeight = (JUMP_FORCE * JUMP_FORCE) / (2 * GRAVITY);
       ctx.strokeStyle = 'red';
@@ -64,11 +71,20 @@
       ctx.setLineDash([]);
 
       updatePlayer();
+      updateEnemies();
+
+      drawEnemies(ctx, 0);
       drawPlayer(ctx, 0);
       drawFruits(ctx, 0);
+
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
   </script>
+  <p style="max-width:800px; margin:10px auto; font-size:14px; color:#aaa;">
+    Teste: ← → anda, Espaço pula (2x = duplo pulo), X arremessa fruta.<br>
+    Da esquerda pra direita: Bulldozer (5 frutas) · Caminhão (invencível, só desvia) ·
+    Drone (3 frutas) · Robô (2 frutas).
+  </p>
 </body>
 </html>
