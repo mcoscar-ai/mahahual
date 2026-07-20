@@ -39,7 +39,7 @@
     var ctx = canvas.getContext('2d');
 
     function resizeTestCanvas() {
-      var w = Math.min(window.innerWidth - 20, 800);
+      var w = Math.min(window.innerWidth - 40, 800); // -40 = padding do body (20px cada lado)
       canvas.width = w;
       canvas.height = w * 0.75; // mantém proporção 4:3
       GROUND_Y = canvas.height - 40; // chão perto da base do canvas visível
