@@ -3,6 +3,44 @@
 // Movimento, pulo duplo, animação e arremesso de fruta.
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// ESCALA DE SPRITES — altura-alvo fixa (não usa o tamanho bruto do PNG)
+// Compartilhado com enemies.js — cada categoria tem uma altura-padrão
+// na tela, independente de quantos pixels o arquivo original tem.
+// ═══════════════════════════════════════════════════════════════
+
+var SPRITE_TARGET_HEIGHT = {
+  character: 180,   // Kiara/Ainhoa/Thiago
+  fruit: 36,
+  // alturas de inimigos ficam aqui também quando o enemies.js existir:
+  // truck: 110, drone: 90, robot: 150, bulldozer: 160, ...
+  truck: 110
+};
+
+// Desenha um sprite ancorado pelos PÉS (base) e centralizado horizontalmente,
+// escalado pra caber exatamente em targetHeight na tela — não importa o
+// tamanho bruto do arquivo PNG original.
+function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
+  if (!img || !img.complete) return null;
+  var scale = targetHeight / img.height;
+  var drawW = img.width * scale;
+  var drawH = targetHeight;
+  var screenX = worldX - cameraX - drawW / 2;
+  var screenY = worldY - drawH;
+
+  ctx.save();
+  if (dir === -1) {
+    ctx.translate(screenX + drawW, screenY);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, drawW, drawH);
+  } else {
+    ctx.drawImage(img, screenX, screenY, drawW, drawH);
+  }
+  ctx.restore();
+
+  return { width: drawW, height: drawH }; // útil pra hitbox de colisão depois
+}
+
 // ── Personagem selecionado ────────────────────────────────────
 // TEMPORÁRIO: fixo em 'kiara' até a Tela de Seleção existir de verdade.
 var SELECTED_CHAR = 'kiara';
@@ -165,27 +203,12 @@ function playerGetHit() {
   if (typeof playSFX === 'function') playSFX('sfx_dizzy');
 }
 
-// ── Desenha o personagem (ancorado pelos pés, centralizado) ─────
+// ── Desenha o personagem (ancorado pelos pés, centralizado, escalado) ──
 function drawPlayer(ctx, cameraX) {
   var n = P.frame + 1;
   var nStr = n < 10 ? '0' + n : '' + n;
   var img = IMAGES[SELECTED_CHAR + '_' + P.state + '_' + nStr];
-  if (!img || !img.complete) return;
-
-  var drawW = img.width;
-  var drawH = img.height;
-  var screenX = P.x - cameraX - drawW / 2;   // centralizado horizontalmente
-  var screenY = P.y - drawH;                 // pés encostados em P.y (chão)
-
-  ctx.save();
-  if (P.dir === -1) {
-    ctx.translate(screenX + drawW, screenY);
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, 0, 0, drawW, drawH);
-  } else {
-    ctx.drawImage(img, screenX, screenY, drawW, drawH);
-  }
-  ctx.restore();
+  drawSprite(ctx, img, P.x, P.y, SPRITE_TARGET_HEIGHT.character, P.dir, cameraX);
 }
 
 // ── Desenha as frutas ativas ──────────────────────────────────
@@ -194,17 +217,6 @@ function drawFruits(ctx, cameraX) {
     var n = f.frame + 1;
     var nStr = n < 10 ? '0' + n : '' + n;
     var img = IMAGES[f.type + '_' + nStr];
-    if (!img || !img.complete) return;
-    var screenX = f.x - cameraX - img.width / 2;
-    var screenY = f.y - img.height / 2;
-    ctx.save();
-    if (f.dir === -1) {
-      ctx.translate(screenX + img.width, screenY);
-      ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0, img.width, img.height);
-    } else {
-      ctx.drawImage(img, screenX, screenY, img.width, img.height);
-    }
-    ctx.restore();
+    drawSprite(ctx, img, f.x, f.y, SPRITE_TARGET_HEIGHT.fruit, f.dir, cameraX);
   });
 }
