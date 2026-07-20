@@ -1,0 +1,151 @@
+// ═══════════════════════════════════════════════════════════════
+// INPUT.JS — Guardiões de Mahahual
+// Mesma arquitetura de controles do Gabriel: teclado (PC) + botões
+// digitais estilo SNES (mobile), com elementFromPoint para deslize
+// suave entre botões e layoutBtns() reposicionando em resize/rotação.
+// ═══════════════════════════════════════════════════════════════
+
+var KEYS = { left: false, right: false, jump: false, throw: false };
+
+var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                ('ontouchstart' in window && window.innerWidth < 1024);
+
+// ── TECLADO (PC) ──────────────────────────────────────────────
+window.addEventListener('keydown', function (e) {
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA': KEYS.left = true; break;
+    case 'ArrowRight': case 'KeyD': KEYS.right = true; break;
+    case 'ArrowUp': case 'KeyW': case 'Space': KEYS.jump = true; e.preventDefault(); break;
+    case 'KeyX': case 'KeyZ': KEYS.throw = true; break;
+  }
+});
+
+window.addEventListener('keyup', function (e) {
+  switch (e.code) {
+    case 'ArrowLeft': case 'KeyA': KEYS.left = false; break;
+    case 'ArrowRight': case 'KeyD': KEYS.right = false; break;
+    case 'ArrowUp': case 'KeyW': case 'Space': KEYS.jump = false; break;
+    case 'KeyX': case 'KeyZ': KEYS.throw = false; break;
+  }
+});
+
+// ── BOTÕES MOBILE (estilo SNES) ──────────────────────────────
+var mobileControls = document.createElement('div');
+mobileControls.id = 'mobile-controls';
+mobileControls.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:1000; display:' + (IS_MOBILE ? 'block' : 'none') + ';';
+document.body.appendChild(mobileControls);
+
+function makeBtn(id, label) {
+  var b = document.createElement('div');
+  b.id = id;
+  b.textContent = label;
+  b.style.cssText =
+    'position:absolute; pointer-events:auto; display:flex; align-items:center; justify-content:center;' +
+    'border-radius:50%; font-family:sans-serif; font-weight:bold; color:#fff; user-select:none;' +
+    'touch-action:none; -webkit-tap-highlight-color:transparent;';
+  mobileControls.appendChild(b);
+  return b;
+}
+
+var btnLeft  = makeBtn('btn-left',  '◄');
+var btnRight = makeBtn('btn-right', '►');
+var btnJump  = makeBtn('btn-jump',  '▲');
+var btnThrow = makeBtn('btn-throw', '🍈');
+
+btnLeft.style.background  = 'rgba(60,60,60,0.55)';
+btnRight.style.background = 'rgba(60,60,60,0.55)';
+btnJump.style.background  = 'rgba(40,110,220,0.75)';   // azul, igual ao Gabriel
+btnThrow.style.background = 'rgba(220,60,50,0.75)';    // vermelho, igual ao Gabriel
+
+// ── layoutBtns(): reposiciona tudo baseado no tamanho ATUAL da tela ──
+function layoutBtns() {
+  var W = window.innerWidth;
+  var H = window.innerHeight;
+  var size = Math.min(W, H) * 0.14;
+  var gap  = Math.min(W, H) * 0.05;
+  var margin = size * 0.4;
+
+  [btnLeft, btnRight, btnJump, btnThrow].forEach(function (b) {
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.fontSize = (size * 0.45) + 'px';
+  });
+
+  // D-pad esquerda/direita — lado esquerdo da tela
+  btnLeft.style.left   = margin + 'px';
+  btnLeft.style.bottom = margin + 'px';
+  btnRight.style.left  = (margin + size + gap) + 'px';
+  btnRight.style.bottom = margin + 'px';
+
+  // Pulo + arremesso — lado direito da tela, JUNTOS (igual ao Gabriel)
+  btnThrow.style.right  = margin + 'px';
+  btnThrow.style.bottom = margin + 'px';
+  btnJump.style.right   = (margin + size + gap) + 'px';
+  btnJump.style.bottom  = margin + 'px';
+}
+
+layoutBtns();
+window.addEventListener('resize', layoutBtns);
+window.addEventListener('orientationchange', function () {
+  setTimeout(layoutBtns, 200); // espera o browser terminar a rotação
+});
+
+// ── elementFromPoint: permite deslizar o dedo entre botões ──────
+// sem precisar soltar e tocar de novo, como um controle físico.
+var activeTouches = {}; // touchId -> nome do botão que está pressionando
+
+function btnNameFromElement(el) {
+  if (!el) return null;
+  if (el.id === 'btn-left') return 'left';
+  if (el.id === 'btn-right') return 'right';
+  if (el.id === 'btn-jump') return 'jump';
+  if (el.id === 'btn-throw') return 'throw';
+  return null;
+}
+
+function setKey(name, val) {
+  if (name) KEYS[name] = val;
+}
+
+mobileControls.addEventListener('touchstart', function (e) {
+  e.preventDefault();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    var name = btnNameFromElement(el);
+    activeTouches[t.identifier] = name;
+    setKey(name, true);
+  }
+}, { passive: false });
+
+mobileControls.addEventListener('touchmove', function (e) {
+  e.preventDefault();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    var newName = btnNameFromElement(el);
+    var oldName = activeTouches[t.identifier];
+    if (newName !== oldName) {
+      setKey(oldName, false);   // solta o botão antigo
+      setKey(newName, true);    // pressiona o novo (deslize suave)
+      activeTouches[t.identifier] = newName;
+    }
+  }
+}, { passive: false });
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    var t = e.changedTouches[i];
+    var name = activeTouches[t.identifier];
+    setKey(name, false);
+    delete activeTouches[t.identifier];
+  }
+}
+mobileControls.addEventListener('touchend', handleTouchEnd, { passive: false });
+mobileControls.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+// ── Evita que o navegador arraste/dê zoom na tela durante o jogo ──
+document.addEventListener('touchmove', function (e) {
+  if (IS_MOBILE) e.preventDefault();
+}, { passive: false });
