@@ -14,8 +14,7 @@
 <body>
   <h1>🌿 Guardiões de Mahahual — Teste de Assets</h1>
   <div id="status">Carregando...</div>
-
-  <script src="js/assets.js"></script>
+<script src="js/assets.js"></script>
   <script src="js/input.js"></script>
   <script>
     checkAssetsLoaded(function () {
@@ -30,6 +29,20 @@
           ASSETS_FAILED.map(function(f){ return '&nbsp;&nbsp;- ' + f; }).join('<br>');
       }
     });
+  </script>
+
+  <canvas id="testCanvas" width="800" height="600" style="background:#8ecf6f; display:block; margin:20px auto;"></canvas>
+  <script src="js/player.js"></script>
+  <script>
+    var ctx = document.getElementById('testCanvas').getContext('2d');
+    function loop() {
+      ctx.clearRect(0, 0, 800, 600);
+      updatePlayer();
+      drawPlayer(ctx, 0);
+      drawFruits(ctx, 0);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>
