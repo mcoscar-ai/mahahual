@@ -52,7 +52,7 @@ function spawnEnemy(type, x, groundY) {
     x: x,
     y: cfg.flies ? groundY - 150 : groundY, // drone voa mais alto
     baseY: cfg.flies ? groundY - 150 : groundY,
-    dir: -1, // por padrão andando pra esquerda, em direção ao início da zona
+    dir: 1, // olhando pra direita por padrão (ajustável por inimigo quando o game.js existir)
     state: firstState,
     frame: 0,
     frameTimer: 0,
