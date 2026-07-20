@@ -50,6 +50,8 @@ function spawnEnemy(type, x, groundY) {
   ENEMIES.push({
     type: type,
     x: x,
+    spawnX: x,               // centro da patrulha
+    patrolRange: 90,         // anda até 90px pra cada lado e volta
     y: cfg.flies ? groundY - 150 : groundY, // drone voa mais alto
     baseY: cfg.flies ? groundY - 150 : groundY,
     dir: 1, // olhando pra direita por padrão (ajustável por inimigo quando o game.js existir)
@@ -82,7 +84,16 @@ function updateEnemies() {
       e.hoverPhase += 0.03;
       e.y = e.baseY + Math.sin(e.hoverPhase) * 15; // flutua suave no ar
     }
-    e.x += cfg.speed * e.dir;
+
+    if (e.type === 'caminhao') {
+      // fica parado — é um obstáculo pra pular por cima, não persegue ninguém.
+      // (só a animação de rodas continua girando, ver updateEnemyAnimation)
+    } else {
+      // patrulha vai-e-vem: anda até patrolRange de cada lado do ponto onde nasceu
+      e.x += cfg.speed * e.dir;
+      if (e.x > e.spawnX + e.patrolRange) { e.x = e.spawnX + e.patrolRange; e.dir = -1; }
+      if (e.x < e.spawnX - e.patrolRange) { e.x = e.spawnX - e.patrolRange; e.dir = 1; }
+    }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──
     e.actionTimer--;
