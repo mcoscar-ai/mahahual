@@ -11,28 +11,32 @@ var ENEMY_TYPES = {
     speed: 1,
     fruitHits: 5,           // frutas pra derrotar
     states: { move: 4, hit: 2, transform: 5 },
-    flies: false
+    flies: false,
+    drawDirFlip: -1          // arte original está espelhada (frente do lado errado)
   },
   caminhao: {
     targetHeight: 140,
     speed: 4,
     fruitHits: null,        // null = invencível a fruta, só desvia
     states: { move: 3 },
-    flies: false
+    flies: false,
+    drawDirFlip: -1          // arte original está espelhada (frente do lado errado)
   },
   drone: {
     targetHeight: 110,
     speed: 2,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
-    flies: true
+    flies: true,
+    drawDirFlip: -1          // arte nativa aponta pra esquerda (como todos os inimigos)
   },
   robot: {
     targetHeight: 190,
     speed: 0.7,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
-    flies: false
+    flies: false,
+    drawDirFlip: -1          // arte nativa aponta pra esquerda (como todos os inimigos)
   }
 };
 
@@ -88,19 +92,22 @@ function updateEnemies() {
     if (e.type === 'caminhao') {
       // segue sempre reto na mesma direção (definida uma vez, na primeira vez que
       // aparece perto da Kiara) — não fica "mirando" nela, é um obstáculo que atravessa.
-      if (e.dir === undefined || e.truckDirSet !== true) {
+      if (e.truckDirSet !== true) {
         e.dir = (P.x - e.x) >= 0 ? 1 : -1;
         e.truckDirSet = true;
       }
       e.x += cfg.speed * e.dir;
     } else {
+      // Só re-mira na Kiara quando está LONGE. Quando chega perto, trava a
+      // direção atual e ATRAVESSA, seguindo o rumo — nunca para em cima dela.
+      // (Isso elimina o loop eterno de tontura: depois de encostar, ele passa
+      // direto, se afasta, e só então pode dar meia-volta pra outra investida.)
+      var RETARGET_DISTANCE = 160;
       var distToPlayer = P.x - e.x;
-      e.dir = distToPlayer >= 0 ? 1 : -1; // vira de frente pra ela
-
-      var STOP_DISTANCE = 70; // pra não empilhar em cima da Kiara
-      if (Math.abs(distToPlayer) > STOP_DISTANCE) {
-        e.x += cfg.speed * e.dir;
+      if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
+        e.dir = distToPlayer >= 0 ? 1 : -1;
       }
+      e.x += cfg.speed * e.dir;
     }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──
@@ -222,6 +229,7 @@ function drawEnemies(ctx, cameraX) {
     var n = e.frame + 1;
     var nStr = n < 10 ? '0' + n : '' + n;
     var img = IMAGES[e.type + '_' + e.state + '_' + nStr];
-    drawSprite(ctx, img, e.x, e.y, cfg.targetHeight, e.dir, cameraX);
+    var visualDir = e.dir * cfg.drawDirFlip; // corrige orientação da arte sem mexer no movimento
+    drawSprite(ctx, img, e.x, e.y, cfg.targetHeight, visualDir, cameraX);
   });
 }
