@@ -40,14 +40,14 @@
     function loop() {
       ctx.clearRect(0, 0, 800, 600);
 
-      // Caminhão parado do lado direito, só pra comparar tamanho/altura do pulo
+      // Caminhão parado do lado direito, escalado pra altura-alvo (não o
+      // tamanho bruto do PNG) — mesma lógica que os personagens agora usam
       var truck = IMAGES['caminhao_move_01'];
-      if (truck && truck.complete) {
-        var tx = 500, ty = GROUND_Y - truck.height;
-        ctx.drawImage(truck, tx, ty, truck.width, truck.height);
+      var truckDims = drawSprite(ctx, truck, 650, GROUND_Y, SPRITE_TARGET_HEIGHT.truck, 1, 0);
+      if (truckDims) {
         ctx.fillStyle = '#fff';
         ctx.font = '12px sans-serif';
-        ctx.fillText('caminhão: ' + truck.width + '×' + truck.height + 'px', tx, ty - 8);
+        ctx.fillText('caminhão escalado: ' + Math.round(truckDims.width) + '×' + Math.round(truckDims.height) + 'px', 500, GROUND_Y - truckDims.height - 8);
       }
 
       // Linha horizontal marcando a altura MÁXIMA que o pulo alcança
