@@ -2,101 +2,44 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardiões de Mahahual — Teste de Assets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Guardiões de Mahahual</title>
 <style>
-  body { background:#1a1a1a; color:#fff; font-family: monospace; padding: 20px; }
-  #status { font-size: 18px; margin-bottom: 20px; }
-  .ok { color: #4caf50; }
-  .fail { color: #f44336; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; overflow:hidden; }
+  #gameCanvas { display:block; touch-action:none; }
 </style>
 </head>
 <body>
-  <h1>🌿 Guardiões de Mahahual — Teste de Assets</h1>
-  <div id="status">Carregando...</div>
+  <canvas id="gameCanvas"></canvas>
 
   <script src="js/assets.js"></script>
   <script src="js/input.js"></script>
-  <script>
-    checkAssetsLoaded(function () {
-      var statusDiv = document.getElementById('status');
-      var okCount = ASSETS_TOTAL - ASSETS_FAILED.length;
-      if (ASSETS_FAILED.length === 0) {
-        statusDiv.innerHTML = '<span class="ok">✅ TODOS os ' + ASSETS_TOTAL + ' assets carregaram certinho!</span>';
-      } else {
-        statusDiv.innerHTML =
-          '<span class="ok">' + okCount + '/' + ASSETS_TOTAL + ' carregaram</span><br>' +
-          '<span class="fail">❌ ' + ASSETS_FAILED.length + ' falharam:</span><br>' +
-          ASSETS_FAILED.map(function(f){ return '&nbsp;&nbsp;- ' + f; }).join('<br>');
-      }
-    });
-  </script>
-
-  <canvas id="testCanvas" style="background:#8ecf6f; display:block; margin:20px auto; max-width:100%; touch-action:none;"></canvas>
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
+  <script src="js/renderer.js"></script>
   <script>
-    var canvas = document.getElementById('testCanvas');
-    var ctx = canvas.getContext('2d');
     var enemiesSpawned = false;
 
-    function resizeTestCanvas() {
-      var w = Math.min(window.innerWidth - 40, 800); // -40 = padding do body (20px cada lado)
-      canvas.width = w;
-      canvas.height = w * 0.75; // mantém proporção 4:3
-      GROUND_Y = canvas.height - 40; // chão perto da base do canvas visível
-      P.y = GROUND_Y;
-
+    checkAssetsLoaded(function () {
       if (!enemiesSpawned) {
         P.x = 100;
-        // espalhados no MUNDO (não na tela) — dá espaço pra se aproximar um de cada vez
         spawnEnemy('bulldozer', 700,  GROUND_Y);
-        spawnEnemy('caminhao',  1300, GROUND_Y);
-        spawnEnemy('drone',     1900, GROUND_Y);
-        spawnEnemy('robot',     2500, GROUND_Y);
+        spawnEnemy('caminhao',  1400, GROUND_Y);
+        spawnEnemy('drone',     2100, GROUND_Y);
+        spawnEnemy('robot',     2800, GROUND_Y);
         enemiesSpawned = true;
-      } else {
-        // reposiciona os já existentes no novo chão, sem duplicar
-        ENEMIES.forEach(function (e) {
-          var cfg = ENEMY_TYPES[e.type];
-          e.baseY = cfg.flies ? GROUND_Y - 150 : GROUND_Y;
-          if (!cfg.flies) e.y = GROUND_Y;
-        });
       }
-    }
-    resizeTestCanvas();
-    window.addEventListener('resize', resizeTestCanvas);
 
-    function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // câmera simples: segue a Kiara, centralizada, sem passar de x=0
-      var cameraX = Math.max(0, P.x - canvas.width / 2);
-
-      var maxJumpHeight = (JUMP_FORCE * JUMP_FORCE) / (2 * GRAVITY);
-      ctx.strokeStyle = 'red';
-      ctx.setLineDash([6, 4]);
-      ctx.beginPath();
-      ctx.moveTo(0, GROUND_Y - maxJumpHeight);
-      ctx.lineTo(canvas.width, GROUND_Y - maxJumpHeight);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      updatePlayer();
-      updateEnemies();
-
-      drawEnemies(ctx, cameraX);
-      drawPlayer(ctx, cameraX);
-      drawFruits(ctx, cameraX);
-
+      function loop() {
+        updateCamera();
+        updatePlayer();
+        updateEnemies();
+        render(1); // zona 1 (bg_zona1)
+        requestAnimationFrame(loop);
+      }
       requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
+    });
   </script>
-  <p style="max-width:800px; margin:10px auto; font-size:14px; color:#aaa;">
-    Teste: ← → anda (o mundo é maior que a tela, a câmera segue você), Espaço pula, X arremessa fruta.<br>
-    Andando pra direita você encontra, em ordem: Bulldozer (5 frutas) → Caminhão (invencível) →
-    Drone (3 frutas) → Robô (2 frutas).
-  </p>
 </body>
 </html>
