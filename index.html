@@ -14,7 +14,8 @@
 <body>
   <h1>🌿 Guardiões de Mahahual — Teste de Assets</h1>
   <div id="status">Carregando...</div>
-<script src="js/assets.js"></script>
+
+  <script src="js/assets.js"></script>
   <script src="js/input.js"></script>
   <script>
     checkAssetsLoaded(function () {
@@ -35,8 +36,32 @@
   <script src="js/player.js"></script>
   <script>
     var ctx = document.getElementById('testCanvas').getContext('2d');
+
     function loop() {
       ctx.clearRect(0, 0, 800, 600);
+
+      // Caminhão parado do lado direito, só pra comparar tamanho/altura do pulo
+      var truck = IMAGES['caminhao_move_01'];
+      if (truck && truck.complete) {
+        var tx = 500, ty = GROUND_Y - truck.height;
+        ctx.drawImage(truck, tx, ty, truck.width, truck.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('caminhão: ' + truck.width + '×' + truck.height + 'px', tx, ty - 8);
+      }
+
+      // Linha horizontal marcando a altura MÁXIMA que o pulo alcança
+      var maxJumpHeight = (JUMP_FORCE * JUMP_FORCE) / (2 * GRAVITY);
+      ctx.strokeStyle = 'red';
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y - maxJumpHeight);
+      ctx.lineTo(800, GROUND_Y - maxJumpHeight);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'red';
+      ctx.fillText('topo do pulo (' + Math.round(maxJumpHeight) + 'px)', 10, GROUND_Y - maxJumpHeight - 6);
+
       updatePlayer();
       drawPlayer(ctx, 0);
       drawFruits(ctx, 0);
@@ -46,4 +71,3 @@
   </script>
 </body>
 </html>
-   
