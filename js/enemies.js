@@ -79,20 +79,28 @@ function updateEnemies() {
       continue;
     }
 
-    // ── Movimento ──
+    // ── Movimento: avança em direção à Kiara ──
     if (e.type === 'drone') {
       e.hoverPhase += 0.03;
       e.y = e.baseY + Math.sin(e.hoverPhase) * 15; // flutua suave no ar
     }
 
     if (e.type === 'caminhao') {
-      // fica parado — é um obstáculo pra pular por cima, não persegue ninguém.
-      // (só a animação de rodas continua girando, ver updateEnemyAnimation)
-    } else {
-      // patrulha vai-e-vem: anda até patrolRange de cada lado do ponto onde nasceu
+      // segue sempre reto na mesma direção (definida uma vez, na primeira vez que
+      // aparece perto da Kiara) — não fica "mirando" nela, é um obstáculo que atravessa.
+      if (e.dir === undefined || e.truckDirSet !== true) {
+        e.dir = (P.x - e.x) >= 0 ? 1 : -1;
+        e.truckDirSet = true;
+      }
       e.x += cfg.speed * e.dir;
-      if (e.x > e.spawnX + e.patrolRange) { e.x = e.spawnX + e.patrolRange; e.dir = -1; }
-      if (e.x < e.spawnX - e.patrolRange) { e.x = e.spawnX - e.patrolRange; e.dir = 1; }
+    } else {
+      var distToPlayer = P.x - e.x;
+      e.dir = distToPlayer >= 0 ? 1 : -1; // vira de frente pra ela
+
+      var STOP_DISTANCE = 70; // pra não empilhar em cima da Kiara
+      if (Math.abs(distToPlayer) > STOP_DISTANCE) {
+        e.x += cfg.speed * e.dir;
+      }
     }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──
