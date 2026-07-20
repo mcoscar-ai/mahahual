@@ -10,11 +10,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 var SPRITE_TARGET_HEIGHT = {
-  character: 180,   // Kiara/Ainhoa/Thiago
-  fruit: 36,
+  character: 220,   // Kiara/Ainhoa/Thiago
+  fruit: 44,
   // alturas de inimigos ficam aqui também quando o enemies.js existir:
-  // truck: 110, drone: 90, robot: 150, bulldozer: 160, ...
-  truck: 110
+  // drone: 110, robot: 190, bulldozer: 200, ...
+  truck: 140
 };
 
 // Desenha um sprite ancorado pelos PÉS (base) e centralizado horizontalmente,
@@ -48,7 +48,7 @@ var SELECTED_CHAR = 'kiara';
 // ── Constantes de física ──────────────────────────────────────
 var MOVE_SPEED   = 3;      // px/frame, horizontal
 var GRAVITY      = 0.5;    // px/frame², pulo "flutuante" (não realista/pesado)
-var JUMP_FORCE   = -12;    // impulso vertical ao pular (ajustado: precisa passar por cima do caminhão)
+var JUMP_FORCE   = -14;    // impulso vertical ao pular (recalibrado para o novo tamanho-alvo)
 var MAX_JUMPS    = 2;      // pulo duplo
 var GROUND_Y     = 500;    // linha do chão (ajustável quando o renderer.js definir o canvas real)
 
