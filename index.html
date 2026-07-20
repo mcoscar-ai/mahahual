@@ -48,11 +48,20 @@
       P.y = GROUND_Y;
 
       if (!enemiesSpawned) {
-        spawnEnemy('bulldozer', canvas.width * 0.40, GROUND_Y);
-        spawnEnemy('caminhao',  canvas.width * 0.62, GROUND_Y);
-        spawnEnemy('drone',     canvas.width * 0.80, GROUND_Y);
-        spawnEnemy('robot',     canvas.width * 0.95, GROUND_Y);
+        P.x = 100;
+        // espalhados no MUNDO (não na tela) — dá espaço pra se aproximar um de cada vez
+        spawnEnemy('bulldozer', 700,  GROUND_Y);
+        spawnEnemy('caminhao',  1300, GROUND_Y);
+        spawnEnemy('drone',     1900, GROUND_Y);
+        spawnEnemy('robot',     2500, GROUND_Y);
         enemiesSpawned = true;
+      } else {
+        // reposiciona os já existentes no novo chão, sem duplicar
+        ENEMIES.forEach(function (e) {
+          var cfg = ENEMY_TYPES[e.type];
+          e.baseY = cfg.flies ? GROUND_Y - 150 : GROUND_Y;
+          if (!cfg.flies) e.y = GROUND_Y;
+        });
       }
     }
     resizeTestCanvas();
@@ -60,6 +69,9 @@
 
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // câmera simples: segue a Kiara, centralizada, sem passar de x=0
+      var cameraX = Math.max(0, P.x - canvas.width / 2);
 
       var maxJumpHeight = (JUMP_FORCE * JUMP_FORCE) / (2 * GRAVITY);
       ctx.strokeStyle = 'red';
@@ -73,18 +85,18 @@
       updatePlayer();
       updateEnemies();
 
-      drawEnemies(ctx, 0);
-      drawPlayer(ctx, 0);
-      drawFruits(ctx, 0);
+      drawEnemies(ctx, cameraX);
+      drawPlayer(ctx, cameraX);
+      drawFruits(ctx, cameraX);
 
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
   </script>
   <p style="max-width:800px; margin:10px auto; font-size:14px; color:#aaa;">
-    Teste: ← → anda, Espaço pula (2x = duplo pulo), X arremessa fruta.<br>
-    Da esquerda pra direita: Bulldozer (5 frutas) · Caminhão (invencível, só desvia) ·
-    Drone (3 frutas) · Robô (2 frutas).
+    Teste: ← → anda (o mundo é maior que a tela, a câmera segue você), Espaço pula, X arremessa fruta.<br>
+    Andando pra direita você encontra, em ordem: Bulldozer (5 frutas) → Caminhão (invencível) →
+    Drone (3 frutas) → Robô (2 frutas).
   </p>
 </body>
 </html>
