@@ -10,7 +10,7 @@ var SELECTED_CHAR = 'kiara';
 // ── Constantes de física ──────────────────────────────────────
 var MOVE_SPEED   = 3;      // px/frame, horizontal
 var GRAVITY      = 0.5;    // px/frame², pulo "flutuante" (não realista/pesado)
-var JUMP_FORCE   = -9;     // impulso vertical ao pular
+var JUMP_FORCE   = -12;    // impulso vertical ao pular (ajustado: precisa passar por cima do caminhão)
 var MAX_JUMPS    = 2;      // pulo duplo
 var GROUND_Y     = 500;    // linha do chão (ajustável quando o renderer.js definir o canvas real)
 
