@@ -15,27 +15,25 @@
 
   <script src="js/assets.js"></script>
   <script src="js/input.js"></script>
+  <script src="js/renderer.js"></script>
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
-  <script src="js/renderer.js"></script>
   <script>
-    var enemiesSpawned = false;
+    // renderer.js já rodou resizeCanvas() e definiu GROUND_Y corretamente
+    // agora posiciona o personagem no chão real
+    P.y = GROUND_Y;
 
     checkAssetsLoaded(function () {
-      if (!enemiesSpawned) {
-        P.x = 100;
-        spawnEnemy('bulldozer', 700,  GROUND_Y);
-        spawnEnemy('caminhao',  1400, GROUND_Y);
-        spawnEnemy('drone',     2100, GROUND_Y);
-        spawnEnemy('robot',     2800, GROUND_Y);
-        enemiesSpawned = true;
-      }
+      spawnEnemy('bulldozer', 700,  GROUND_Y);
+      spawnEnemy('caminhao',  1400, GROUND_Y);
+      spawnEnemy('drone',     2100, GROUND_Y);
+      spawnEnemy('robot',     2800, GROUND_Y);
 
       function loop() {
         updateCamera();
         updatePlayer();
         updateEnemies();
-        render(1); // zona 1 (bg_zona1)
+        render(1);
         requestAnimationFrame(loop);
       }
       requestAnimationFrame(loop);
