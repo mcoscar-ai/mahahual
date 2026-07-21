@@ -100,7 +100,7 @@ function updateEnemies() {
         e.y = e.baseY + Math.sin(e.hoverPhase) * 12;
         var distToPlayer = P.x - e.x;
         e.dir = distToPlayer >= 0 ? 1 : -1;
-        if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
+        if (Math.abs(distToPlayer) > 80) {
           e.x += cfg.speed * e.dir;
         }
         // A cada ~5s mergulha em direção à Kiara (swoop rápido)
@@ -144,14 +144,12 @@ function updateEnemies() {
       if (Math.abs(P.x - e.x) > 2500) e.removed = true;
     } else {
       // Persegue sempre — re-mira a cada frame independente da distância
-      // Quando chega perto (dentro de 80px), trava a direção e atravessa
-      // pra não ficar vibrando em cima dela
+      var RETARGET_DISTANCE = 80;
       var distToPlayer = P.x - e.x;
-      var LOCK_DISTANCE = 80;
-      if (Math.abs(distToPlayer) > LOCK_DISTANCE) {
+      if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
         e.dir = distToPlayer >= 0 ? 1 : -1;
       }
-      e.x += cfg.speed * e.dir; // move SEMPRE, sem parar
+      e.x += cfg.speed * e.dir;
     }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──
