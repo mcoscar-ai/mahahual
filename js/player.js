@@ -52,7 +52,7 @@ var MAX_JUMPS    = 2;      // pulo duplo
 
 var DIZZY_DURATION   = 120;  // 2s a 60fps
 var THROW_COOLDOWN   = 24;   // 0.4s a 60fps
-var FRUIT_SPEED       = 7;   // px/frame, linha reta horizontal
+var FRUIT_SPEED  = 14;   // px/frame — deve ser bem mais rápido que o personagem (7px)
 
 // ── Estado do jogador ─────────────────────────────────────────
 var P = {
