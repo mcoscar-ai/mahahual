@@ -8,7 +8,7 @@
 var ENEMY_TYPES = {
   bulldozer: {
     targetHeight: 130,
-    speed: 7,        // igual ao Goomba do Mario
+    speed: 1.5,      // lento — criança tem tempo de reagir
     fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
@@ -16,7 +16,7 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speed: 7,        // caminhão anda igual — só é perigo por ser rápido de aproximação
+    speed: 3,        // caminhão um pouco mais rápido (é obstáculo que atravessa)
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -24,7 +24,7 @@ var ENEMY_TYPES = {
   },
   drone: {
     targetHeight: 75,
-    speed: 7,        // mesmo ritmo
+    speed: 1.5,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
     flies: true,
@@ -32,7 +32,7 @@ var ENEMY_TYPES = {
   },
   robot: {
     targetHeight: 120,
-    speed: 5,        // robô um pouco mais lento (mais pesado)
+    speed: 1,        // mais lento — robô pesado
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
