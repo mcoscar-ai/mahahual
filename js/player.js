@@ -9,13 +9,7 @@
 // na tela, independente de quantos pixels o arquivo original tem.
 // ═══════════════════════════════════════════════════════════════
 
-// Tamanhos calculados em % da altura do canvas — proporcional em qualquer tela
-// Recalculados pelo renderer.js a cada resize via updateSpriteTargetHeights()
-var SPRITE_TARGET_HEIGHT = {
-  character: 130,
-  fruit: 28,
-  truck: 100
-};
+// SPRITE_TARGET_HEIGHT declarado no renderer.js (carrega antes)
 
 // Desenha um sprite ancorado pelos PÉS (base) e centralizado horizontalmente,
 // escalado pra caber exatamente em targetHeight na tela — não importa o
