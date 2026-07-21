@@ -9,8 +9,10 @@
 // na tela, independente de quantos pixels o arquivo original tem.
 // ═══════════════════════════════════════════════════════════════
 
+// Tamanhos calculados em % da altura do canvas — proporcional em qualquer tela
+// Recalculados pelo renderer.js a cada resize via updateSpriteTargetHeights()
 var SPRITE_TARGET_HEIGHT = {
-  character: 130,   // Kiara/Ainhoa/Thiago — menor, mais proporcional ao cenário
+  character: 130,
   fruit: 28,
   truck: 100
 };
