@@ -46,15 +46,28 @@ function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
 var SELECTED_CHAR = 'kiara';
 
 // ── Constantes de física ──────────────────────────────────────
-var MOVE_SPEED   = 7;      // px/frame — velocidade ajustada
+// Valores base — recalculados por updatePhysics() a cada resize do canvas
+var MOVE_SPEED   = 7;
 var GRAVITY      = 0.5;
-var JUMP_FORCE   = -12;    // recalibrado pro novo tamanho de sprite
-var MAX_JUMPS    = 2;      // pulo duplo
+var JUMP_FORCE   = -12;
+var MAX_JUMPS    = 2;
+var FRUIT_SPEED  = 10;
+
+// Chamado pelo renderer.js a cada resize — ajusta física ao tamanho real da tela
+function updatePhysics() {
+  if (typeof CANVAS === 'undefined') return;
+  var h = CANVAS.height;
+  var w = CANVAS.width;
+  MOVE_SPEED  = Math.max(4, Math.round(w * 0.012)); // 1.2% da largura
+  FRUIT_SPEED = Math.max(6, Math.round(w * 0.018)); // 1.8% da largura
+  GRAVITY     = h * 0.0007;                          // proporcional à altura
+  JUMP_FORCE  = -Math.sqrt(2 * GRAVITY * h * 0.42); // pulo alcança 42% da altura (cobre o drone)
+}
+
 // GROUND_Y é definido e mantido pelo renderer.js (varia com o tamanho da tela)
 
 var DIZZY_DURATION   = 120;  // 2s a 60fps
 var THROW_COOLDOWN   = 24;   // 0.4s a 60fps
-var FRUIT_SPEED  = 10;   // px/frame — mais rápida que o personagem mas não demais
 
 // ── Estado do jogador ─────────────────────────────────────────
 var P = {
