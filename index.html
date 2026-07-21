@@ -47,6 +47,37 @@
   #btnFullscreen:active { background: rgba(255,255,255,0.25); }
   /* Esconde o botão quando já está em fullscreen */
   #btnFullscreen.hidden { display: none; }
+
+  /* Overlay "gire o celular" — jogo é landscape-only */
+  #rotateOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #0d2b12;
+    color: #fff;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    font-family: sans-serif;
+  }
+  #rotateOverlay.visible { display: flex; }
+  #rotateOverlay .icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: rotateHint 1.6s ease-in-out infinite;
+  }
+  #rotateOverlay p {
+    font-size: 20px;
+    font-weight: bold;
+    max-width: 320px;
+  }
+  @keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+  }
 </style>
 </head>
 <body>
@@ -54,6 +85,12 @@
 
   <!-- Botão de tela cheia — visível até o usuário ativar -->
   <button id="btnFullscreen" title="Tela cheia">⛶</button>
+
+  <!-- Overlay exibido quando o celular está em pé (portrait) -->
+  <div id="rotateOverlay">
+    <div class="icon">📱</div>
+    <p>Gire o celular para jogar!<br>Este jogo é melhor na horizontal.</p>
+  </div>
 
   <script src="js/assets.js"></script>
   <script src="js/input.js"></script>
@@ -102,6 +139,18 @@
     }
     fixAltura();
     window.addEventListener('resize', fixAltura);
+
+    // ── Aviso "gire o celular" (jogo é landscape-only) ───────
+    var rotateOverlay = document.getElementById('rotateOverlay');
+    function checkOrientation() {
+      var isPortrait = window.innerWidth < window.innerHeight;
+      rotateOverlay.classList.toggle('visible', isPortrait);
+    }
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', function () {
+      setTimeout(checkOrientation, 200);
+    });
 
     // ── Inicializa jogo após assets carregarem ───────────────
     P.y = GROUND_Y;
