@@ -92,7 +92,7 @@ window.addEventListener('orientationchange', function () {
 
 // ── elementFromPoint: permite deslizar o dedo entre botões ──────
 // sem precisar soltar e tocar de novo, como um controle físico.
-var activeTouches = {}; // touchId -> nome do botão que está pressionando
+var activeTouches = {}; // pointerId -> nome do botão que está pressionando
 
 function btnNameFromElement(el) {
   if (!el) return null;
@@ -107,7 +107,53 @@ function setKey(name, val) {
   if (name) KEYS[name] = val;
 }
 
+// ── Pointer Events direto em cada botão ──────────────────────────
+// Mais confiável que touchstart+elementFromPoint sozinho: o navegador
+// já resolve o hit-test correto no pointerdown, mesmo quando a barra
+// de endereço do celular expande/recolhe e desalinha coordenadas.
+var ALL_BTNS = [btnLeft, btnRight, btnJump, btnThrow];
+
+ALL_BTNS.forEach(function (b) {
+  var name = btnNameFromElement(b);
+  b.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    if (b.setPointerCapture) {
+      try { b.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    activeTouches[e.pointerId] = name;
+    setKey(name, true);
+  }, { passive: false });
+});
+
+function releasePointer(e) {
+  var name = activeTouches[e.pointerId];
+  if (name) setKey(name, false);
+  delete activeTouches[e.pointerId];
+}
+
+mobileControls.addEventListener('pointerup', releasePointer);
+mobileControls.addEventListener('pointercancel', releasePointer);
+window.addEventListener('pointerup', releasePointer);
+window.addEventListener('pointercancel', releasePointer);
+
+// Deslize suave entre botões (ex: solta esquerda e desliza pra direita
+// sem tirar o dedo da tela) — só reavalia enquanto o ponteiro já está
+// pressionado em algum botão rastreado.
+mobileControls.addEventListener('pointermove', function (e) {
+  if (!(e.pointerId in activeTouches)) return;
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  var newName = btnNameFromElement(el);
+  var oldName = activeTouches[e.pointerId];
+  if (newName !== oldName) {
+    setKey(oldName, false);
+    setKey(newName, true);
+    activeTouches[e.pointerId] = newName;
+  }
+});
+
+// ── Fallback touch (navegadores antigos sem Pointer Events) ─────
 mobileControls.addEventListener('touchstart', function (e) {
+  if (window.PointerEvent) return; // Pointer Events já cuidam disso
   e.preventDefault();
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
@@ -119,6 +165,7 @@ mobileControls.addEventListener('touchstart', function (e) {
 }, { passive: false });
 
 mobileControls.addEventListener('touchmove', function (e) {
+  if (window.PointerEvent) return;
   e.preventDefault();
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
@@ -134,6 +181,7 @@ mobileControls.addEventListener('touchmove', function (e) {
 }, { passive: false });
 
 function handleTouchEnd(e) {
+  if (window.PointerEvent) return;
   e.preventDefault();
   for (var i = 0; i < e.changedTouches.length; i++) {
     var t = e.changedTouches[i];
