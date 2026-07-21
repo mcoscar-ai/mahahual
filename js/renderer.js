@@ -39,7 +39,7 @@ var ZONE_BACKGROUNDS = {
   3: 'bg_zona3'
 };
 
-var PARALLAX_FACTOR = 0.3; // o fundo se move a 30% da velocidade da câmera
+var PARALLAX_FACTOR = 0.15; // mais lento = menos repetições visíveis por tela
 
 function drawBackground(zone) {
   var imgKey = ZONE_BACKGROUNDS[zone] || 'bg_zona1';
@@ -50,36 +50,31 @@ function drawBackground(zone) {
     return;
   }
 
-  // Escala a imagem pra cobrir o canvas mantendo proporção (cover)
-  // — não estica, faz crop centralizado se necessário
-  var scaleX = CANVAS.width  / img.width;
-  var scaleY = CANVAS.height / img.height;
-  var scale  = Math.max(scaleX, scaleY); // cover: usa a maior escala
+  var cw = CANVAS.width;
+  var ch = CANVAS.height;
+
+  var scaleX = cw / img.width;
+  var scaleY = ch / img.height;
+  var scale  = Math.max(scaleX, scaleY);
 
   var drawW = img.width  * scale;
   var drawH = img.height * scale;
 
-  // Parallax: desloca horizontalmente com a câmera
   var parallaxOffset = -(CAM.x * PARALLAX_FACTOR) % drawW;
   if (parallaxOffset > 0) parallaxOffset -= drawW;
 
-  // Centraliza verticalmente
-  var offsetY = (CANVAS.height - drawH) / 2;
+  var offsetY = (ch - drawH) / 2;
 
-  // while loop: copia até cobrir toda a largura da tela
   var x = parallaxOffset;
-  while (x < CANVAS.width) {
+  while (x < cw) {
     CTX.drawImage(img, x, offsetY, drawW, drawH);
     x += drawW;
   }
 }
 
-// ── Linha do chão relativa ao canvas ─────────────────────────
-// GROUND_Y fica definido aqui e sincronizado com o resize do canvas.
-// O player.js usa essa variável pra ancoragem dos pés.
 function updateGroundY() {
-  // O chão visual nas novas imagens fica em ~72% da altura do canvas
-  GROUND_Y = Math.round(CANVAS.height * 0.72);
+  // Chão de terra da imagem fica em ~80% da altura do canvas
+  GROUND_Y = Math.round(CANVAS.height * 0.80);
   if (typeof P !== 'undefined') P.y = Math.min(P.y, GROUND_Y);
 }
 
