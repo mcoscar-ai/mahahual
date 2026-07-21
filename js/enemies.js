@@ -16,7 +16,7 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speed: 5,
+    speed: 2,     // era 5 — bem mais lento, dá tempo de reação
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -143,13 +143,15 @@ function updateEnemies() {
       e.x += cfg.speed * e.dir;
       if (Math.abs(P.x - e.x) > 2500) e.removed = true;
     } else {
-      // Ainda não tocou: persegue. Re-mira só quando longe; perto, trava e atravessa.
-      var RETARGET_DISTANCE = 160;
+      // Persegue sempre — re-mira a cada frame independente da distância
+      // Quando chega perto (dentro de 80px), trava a direção e atravessa
+      // pra não ficar vibrando em cima dela
       var distToPlayer = P.x - e.x;
-      if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
+      var LOCK_DISTANCE = 80;
+      if (Math.abs(distToPlayer) > LOCK_DISTANCE) {
         e.dir = distToPlayer >= 0 ? 1 : -1;
       }
-      e.x += cfg.speed * e.dir;
+      e.x += cfg.speed * e.dir; // move SEMPRE, sem parar
     }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──
@@ -251,7 +253,18 @@ function checkPlayerCollision(e, cfg) {
 
   if (pRight > eLeft && pLeft < eRight && pBottom > eTop && pTop < eBottom) {
     playerGetHit();
-    e.leaving = true; // tocou → segue o caminho reto pra sempre, nunca mais volta
+    e.leaving = true; // tocou → vai embora pra sempre
+
+    // drone: ao invés de seguir reto (que o manteria em cima dela),
+    // volta pro modo patrol numa posição longe
+    if (e.type === 'drone') {
+      e.droneMode = 'patrol';
+      e.x = P.x + (e.dir >= 0 ? 700 : -700);
+      e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35);
+      e.y = e.baseY;
+      e.leaving = false; // drone pode voltar pra dar nova passagem
+      e.actionTimer = 300; // espera antes do próximo swoop
+    }
   }
 }
 
