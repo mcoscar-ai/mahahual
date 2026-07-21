@@ -107,10 +107,18 @@
     P.y = GROUND_Y;
 
     checkAssetsLoaded(function () {
-      spawnEnemy('bulldozer', 700,  GROUND_Y);
-      spawnEnemy('caminhao',  1400, GROUND_Y);
-      spawnEnemy('drone',     2100, GROUND_Y);
-      spawnEnemy('robot',     2800, GROUND_Y);
+      spawnEnemy('bulldozer', 1200, GROUND_Y);
+      spawnEnemy('caminhao',  2800, GROUND_Y);
+      spawnEnemy('drone',     4500, GROUND_Y);
+      spawnEnemy('robot',     6200, GROUND_Y);
+
+      // Drone começa numa altura que dá pra pular e acertar
+      ENEMIES.forEach(function(e) {
+        if (e.type === 'drone') {
+          e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35);
+          e.y = e.baseY;
+        }
+      });
 
       function loop() {
         updateCamera();
