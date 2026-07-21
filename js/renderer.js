@@ -81,14 +81,14 @@ function updateGroundY() {
 // ~15% da altura = personagem (proporcional em qualquer tela)
 function updateSpriteTargetHeights() {
   var h = CANVAS.height;
-  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15);
-  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.035);
-  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.13);
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.28);  // dobro do anterior (0.15)
+  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.06);
+  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.22);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.14);
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.13);
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.09);
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.13);
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.26);
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.22);
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.14);
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.24);
   }
 }
 
