@@ -86,7 +86,9 @@ function updateGroundY() {
 function updateSpriteTargetHeights() {
   var h = CANVAS.height;
   // 15% da altura do canvas = tamanho Mario Bros proporcional
-  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15);
+  // No celular os personagens ficam 15% maiores (mais fáceis de ver/tocar)
+  var charMultiplier = (typeof IS_MOBILE !== 'undefined' && IS_MOBILE) ? 1.15 : 1;
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15 * charMultiplier);
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
@@ -94,6 +96,15 @@ function updateSpriteTargetHeights() {
     ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14);
     ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10);
     ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15);
+
+    // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
+    // proporcional em qualquer tela (celular sem fullscreen, tablet, etc.)
+    Object.keys(ENEMY_TYPES).forEach(function (type) {
+      var cfg = ENEMY_TYPES[type];
+      if (typeof cfg.speedPct === 'number') {
+        cfg.speed = cfg.speedPct * CANVAS.width;
+      }
+    });
   }
   // Reposiciona inimigos existentes no novo GROUND_Y
   if (typeof ENEMIES !== 'undefined') {

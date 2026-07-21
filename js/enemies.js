@@ -5,10 +5,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── Configuração por tipo (fácil de recalibrar depois) ──────────
+// NOTA: "speed" é recalculado a cada resize por updateSpriteTargetHeights()
+// (renderer.js) a partir de speedPct, que é a fração da LARGURA do canvas
+// percorrida por frame. speedPct foi calibrado a partir dos valores originais
+// em pixels (design base 1920px de largura), então o jogo se comporta
+// exatamente igual a antes na resolução de design, mas escala corretamente
+// em qualquer outra tela (ex: celular sem fullscreen, canvas bem menor).
 var ENEMY_TYPES = {
   bulldozer: {
     targetHeight: 130,
-    speed: 1.5,      // lento — criança tem tempo de reagir
+    speedPct: 1.5 / 1920,   // lento — criança tem tempo de reagir
+    speed: 1.5,             // valor inicial; recalculado no primeiro resize
     fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
@@ -16,7 +23,8 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speed: 3,        // caminhão um pouco mais rápido (é obstáculo que atravessa)
+    speedPct: 3 / 1920,     // caminhão um pouco mais rápido (é obstáculo que atravessa)
+    speed: 3,
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -24,6 +32,7 @@ var ENEMY_TYPES = {
   },
   drone: {
     targetHeight: 75,
+    speedPct: 1.5 / 1920,
     speed: 1.5,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
@@ -32,7 +41,8 @@ var ENEMY_TYPES = {
   },
   robot: {
     targetHeight: 120,
-    speed: 1,        // mais lento — robô pesado
+    speedPct: 1 / 1920,     // mais lento — robô pesado
+    speed: 1,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
