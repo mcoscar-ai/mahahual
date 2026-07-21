@@ -77,6 +77,21 @@ function updateGroundY() {
   if (typeof P !== 'undefined') P.y = Math.min(P.y, GROUND_Y);
 }
 
+// Recalcula tamanhos dos sprites baseado na altura atual do canvas
+// ~15% da altura = personagem (proporcional em qualquer tela)
+function updateSpriteTargetHeights() {
+  var h = CANVAS.height;
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15);
+  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.035);
+  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.13);
+  if (typeof ENEMY_TYPES !== 'undefined') {
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.14);
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.13);
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.09);
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.13);
+  }
+}
+
 // ── Resize responsivo (PC e mobile) ──────────────────────────
 function resizeCanvas() {
   var scaleX = window.innerWidth  / 1920;
@@ -92,6 +107,7 @@ function resizeCanvas() {
   CANVAS.style.height = CANVAS.height + 'px';
 
   updateGroundY();
+  updateSpriteTargetHeights();
   if (typeof layoutBtns === 'function') layoutBtns();
 }
 
