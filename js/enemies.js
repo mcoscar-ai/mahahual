@@ -125,14 +125,23 @@ function updateEnemies() {
           e.dir = dxSwoop >= 0 ? 1 : -1;
         }
       }
+    } else if (e.type === 'caminhao') {
+      // Caminhão: define direção uma vez (vem da direita indo pra esquerda)
+      // e atravessa a tela sem parar — obstáculo pra pular por cima
+      if (!e.truckDirSet) {
+        e.dir = -1; // sempre vem da direita
+        e.truckDirSet = true;
+      }
+      e.x += cfg.speed * e.dir;
+      // se sair muito longe da Kiara, reseta na direita pra fazer nova passagem
+      if (P.x - e.x > 2000) {
+        e.x = P.x + 1200;
+        e.truckDirSet = false;
+      }
     } else if (e.leaving) {
       // JÁ TOCOU a Kiara: segue o caminho reto pra sempre
       e.x += cfg.speed * e.dir;
       if (Math.abs(P.x - e.x) > 2500) e.removed = true;
-    } else if (e.type === 'caminhao') {
-      // JÁ TOCOU a Kiara: segue o caminho reto pra sempre, nunca mais volta.
-      e.x += cfg.speed * e.dir;
-      if (Math.abs(P.x - e.x) > 2500) e.removed = true; // some de vez quando longe
     } else {
       // Ainda não tocou: persegue. Re-mira só quando longe; perto, trava e atravessa.
       var RETARGET_DISTANCE = 160;
