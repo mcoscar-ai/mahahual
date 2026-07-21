@@ -16,14 +16,10 @@ var CAM = { x: 0 }; // posição horizontal da câmera no mundo
 
 function updateCamera() {
   var screenW = CANVAS.width;
-  var centerThreshold = screenW / 2; // começa a seguir só depois do centro
-
-  // câmera segue o personagem quando ele passa do centro da tela
-  var targetX = P.x - centerThreshold;
-  targetX = Math.max(0, targetX);                    // não passa do início
-  targetX = Math.min(WORLD_WIDTH - screenW, targetX); // não passa do fim do mundo
-
-  // movimento suave (lerp) — mesma sensação do Gabriel
+  // Kiara fica a 35% da tela (não 50%) — dá mais espaço à frente pra ver inimigos chegando
+  var targetX = P.x - screenW * 0.35;
+  targetX = Math.max(0, targetX);
+  targetX = Math.min(WORLD_WIDTH - screenW, targetX);
   CAM.x += (targetX - CAM.x) * 0.12;
 }
 
@@ -81,15 +77,31 @@ function updateGroundY() {
 // ~15% da altura = personagem (proporcional em qualquer tela)
 function updateSpriteTargetHeights() {
   var h = CANVAS.height;
-  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.28);  // dobro do anterior (0.15)
-  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.06);
-  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.22);
+  // Percentuais diferentes por tamanho de tela
+  // Celular (h < 500): personagem = 28%, PC (h >= 500): 18% mas canvas maior = visualmente certo
+  var isSmall = h < 500;
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * (isSmall ? 0.28 : 0.18));
+  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * (isSmall ? 0.06 : 0.04));
+  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * (isSmall ? 0.22 : 0.14));
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.26);
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.22);
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.14);
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.24);
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * (isSmall ? 0.26 : 0.17));
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * (isSmall ? 0.22 : 0.14));
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * (isSmall ? 0.14 : 0.10));
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * (isSmall ? 0.24 : 0.16));
   }
+
+  // Reposiciona inimigos existentes no novo GROUND_Y (resolve inimigos flutuando após fullscreen)
+  if (typeof ENEMIES !== 'undefined') {
+    ENEMIES.forEach(function(e) {
+      var cfg = ENEMY_TYPES[e.type];
+      if (!cfg) return;
+      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * 0.35) : GROUND_Y;
+      if (!cfg.flies) e.y = GROUND_Y;
+    });
+  }
+
+  // Recalcula física baseada no canvas atual
+  if (typeof updatePhysics === 'function') updatePhysics();
 }
 
 // ── Resize responsivo (PC e mobile) ──────────────────────────
