@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 var WORLD_WIDTH = 96000; // 3 zonas × 32000px cada (igual ao Gabriel)
+var GROUND_Y = 600;     // valor inicial seguro — atualizado pelo resizeCanvas()
 
 // ── Canvas principal ─────────────────────────────────────────
 var CANVAS = document.getElementById('gameCanvas');
@@ -85,7 +86,6 @@ function resizeCanvas() {
 
   updateGroundY();
   if (typeof layoutBtns === 'function') layoutBtns();
-} // reposiciona botões touch
 }
 
 window.addEventListener('resize', resizeCanvas);
