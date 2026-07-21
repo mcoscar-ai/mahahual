@@ -4,8 +4,16 @@
 // depois que passa do centro da tela) + parallax de background infinito.
 // ═══════════════════════════════════════════════════════════════
 
-var WORLD_WIDTH = 96000; // 3 zonas × 32000px cada (igual ao Gabriel)
-var GROUND_Y = 600;     // valor inicial seguro — atualizado pelo resizeCanvas()
+var WORLD_WIDTH = 96000;
+var GROUND_Y = 600;
+
+// SPRITE_TARGET_HEIGHT declarado aqui (renderer carrega antes do player.js)
+// player.js só usa os valores, não redeclara
+var SPRITE_TARGET_HEIGHT = {
+  character: 130,
+  fruit: 28,
+  truck: 100
+};
 
 // ── Canvas principal ─────────────────────────────────────────
 var CANVAS = document.getElementById('gameCanvas');
