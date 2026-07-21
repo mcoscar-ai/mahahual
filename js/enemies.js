@@ -7,36 +7,36 @@
 // ── Configuração por tipo (fácil de recalibrar depois) ──────────
 var ENEMY_TYPES = {
   bulldozer: {
-    targetHeight: 200,
-    speed: 1,
-    fruitHits: 5,           // frutas pra derrotar
+    targetHeight: 130,
+    speed: 1.5,
+    fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
-    drawDirFlip: -1          // arte original está espelhada (frente do lado errado)
+    drawDirFlip: -1
   },
   caminhao: {
-    targetHeight: 140,
-    speed: 4,
-    fruitHits: null,        // null = invencível a fruta, só desvia
+    targetHeight: 100,
+    speed: 5,
+    fruitHits: null,
     states: { move: 3 },
     flies: false,
-    drawDirFlip: -1          // arte original está espelhada (frente do lado errado)
+    drawDirFlip: -1
   },
   drone: {
-    targetHeight: 110,
+    targetHeight: 75,
     speed: 2,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
     flies: true,
-    drawDirFlip: -1          // arte nativa aponta pra esquerda (como todos os inimigos)
+    drawDirFlip: -1
   },
   robot: {
-    targetHeight: 190,
-    speed: 0.7,
+    targetHeight: 120,
+    speed: 1,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
-    drawDirFlip: -1          // arte nativa aponta pra esquerda (como todos os inimigos)
+    drawDirFlip: -1
   }
 };
 
