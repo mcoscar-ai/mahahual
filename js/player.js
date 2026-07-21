@@ -48,7 +48,7 @@ var MOVE_SPEED   = 5;      // px/frame — mais rápido, sensação mais dinâmi
 var GRAVITY      = 0.5;
 var JUMP_FORCE   = -12;    // recalibrado pro novo tamanho de sprite
 var MAX_JUMPS    = 2;      // pulo duplo
-var GROUND_Y     = 500;    // linha do chão (ajustável quando o renderer.js definir o canvas real)
+// GROUND_Y é definido e mantido pelo renderer.js (varia com o tamanho da tela)
 
 var DIZZY_DURATION   = 120;  // 2s a 60fps
 var THROW_COOLDOWN   = 24;   // 0.4s a 60fps
