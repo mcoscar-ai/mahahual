@@ -89,14 +89,47 @@ function updateEnemies() {
       e.y = e.baseY + Math.sin(e.hoverPhase) * 15; // flutua suave no ar
     }
 
-    if (e.type === 'caminhao') {
-      // segue sempre reto na mesma direção (definida uma vez) — obstáculo que atravessa.
-      if (e.truckDirSet !== true) {
-        e.dir = (P.x - e.x) >= 0 ? 1 : -1;
-        e.truckDirSet = true;
+    if (e.type === 'drone') {
+      e.hoverPhase += 0.03;
+
+      if (!e.droneMode) e.droneMode = 'patrol'; // patrol | swoop
+
+      if (e.droneMode === 'patrol') {
+        // Patrulha lateral: sobe pra uma posição fixa acessível com pulo duplo
+        // e anda de lado em loop — a Kiara pode pular e acertar a fruta nele
+        e.y = e.baseY + Math.sin(e.hoverPhase) * 12;
+        var distToPlayer = P.x - e.x;
+        e.dir = distToPlayer >= 0 ? 1 : -1;
+        if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
+          e.x += cfg.speed * e.dir;
+        }
+        // A cada ~5s mergulha em direção à Kiara (swoop rápido)
+        if (e.actionTimer <= 0) {
+          e.droneMode = 'swoop';
+          e.swoopTargetX = P.x;
+          e.swoopTargetY = GROUND_Y - 40; // desce até perto do chão
+          e.actionTimer = 300 + Math.floor(Math.random() * 120);
+        }
+      } else if (e.droneMode === 'swoop') {
+        // Mergulho: desce rápido até perto do chão passando pela Kiara
+        var dxSwoop = e.swoopTargetX - e.x;
+        var dySwoop = e.swoopTargetY - e.y;
+        var dist = Math.sqrt(dxSwoop*dxSwoop + dySwoop*dySwoop);
+        if (dist < 30) {
+          // chegou no alvo — sobe de volta e volta a patrulhar
+          e.droneMode = 'patrol';
+          e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35); // sobe bem
+        } else {
+          e.x += (dxSwoop / dist) * cfg.speed * 3;
+          e.y += (dySwoop / dist) * cfg.speed * 3;
+          e.dir = dxSwoop >= 0 ? 1 : -1;
+        }
       }
-      e.x += cfg.speed * e.dir;
     } else if (e.leaving) {
+      // JÁ TOCOU a Kiara: segue o caminho reto pra sempre
+      e.x += cfg.speed * e.dir;
+      if (Math.abs(P.x - e.x) > 2500) e.removed = true;
+    } else if (e.type === 'caminhao') {
       // JÁ TOCOU a Kiara: segue o caminho reto pra sempre, nunca mais volta.
       e.x += cfg.speed * e.dir;
       if (Math.abs(P.x - e.x) > 2500) e.removed = true; // some de vez quando longe
