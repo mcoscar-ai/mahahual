@@ -45,20 +45,32 @@ function drawBackground(zone) {
   var imgKey = ZONE_BACKGROUNDS[zone] || 'bg_zona1';
   var img = IMAGES[imgKey];
   if (!img || !img.complete) {
-    // fallback: fundo verde sólido enquanto imagem não carregou
     CTX.fillStyle = '#5a9e4a';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
     return;
   }
 
-  var bgX = -(CAM.x * PARALLAX_FACTOR) % img.width;
-  if (bgX > 0) bgX -= img.width; // garante que começa à esquerda da tela
+  // Escala a imagem pra cobrir o canvas mantendo proporção (cover)
+  // — não estica, faz crop centralizado se necessário
+  var scaleX = CANVAS.width  / img.width;
+  var scaleY = CANVAS.height / img.height;
+  var scale  = Math.max(scaleX, scaleY); // cover: usa a maior escala
 
-  // while loop: desenha cópias até cobrir toda a largura da tela
-  var x = bgX;
+  var drawW = img.width  * scale;
+  var drawH = img.height * scale;
+
+  // Parallax: desloca horizontalmente com a câmera
+  var parallaxOffset = -(CAM.x * PARALLAX_FACTOR) % drawW;
+  if (parallaxOffset > 0) parallaxOffset -= drawW;
+
+  // Centraliza verticalmente
+  var offsetY = (CANVAS.height - drawH) / 2;
+
+  // while loop: copia até cobrir toda a largura da tela
+  var x = parallaxOffset;
   while (x < CANVAS.width) {
-    CTX.drawImage(img, x, 0, img.width, CANVAS.height);
-    x += img.width;
+    CTX.drawImage(img, x, offsetY, drawW, drawH);
+    x += drawW;
   }
 }
 
@@ -66,18 +78,19 @@ function drawBackground(zone) {
 // GROUND_Y fica definido aqui e sincronizado com o resize do canvas.
 // O player.js usa essa variável pra ancoragem dos pés.
 function updateGroundY() {
-  GROUND_Y = CANVAS.height - Math.round(CANVAS.height * 0.18);
-  P.y = Math.min(P.y, GROUND_Y);
+  // O chão visual nas novas imagens fica em ~72% da altura do canvas
+  GROUND_Y = Math.round(CANVAS.height * 0.72);
+  if (typeof P !== 'undefined') P.y = Math.min(P.y, GROUND_Y);
 }
 
 // ── Resize responsivo (PC e mobile) ──────────────────────────
 function resizeCanvas() {
-  var scaleX = window.innerWidth  / 1376;
-  var scaleY = window.innerHeight / 768;
-  var scale  = Math.min(scaleX, scaleY);
+  var scaleX = window.innerWidth  / 1920;
+  var scaleY = window.innerHeight / 1080;
+  var scale  = Math.min(scaleX, scaleY); // preserva proporção 16:9
 
-  CANVAS.width  = Math.round(1376 * scale);
-  CANVAS.height = Math.round(768  * scale);
+  CANVAS.width  = Math.round(1920 * scale);
+  CANVAS.height = Math.round(1080 * scale);
   CANVAS.style.position = 'fixed';
   CANVAS.style.left   = Math.round((window.innerWidth  - CANVAS.width)  / 2) + 'px';
   CANVAS.style.top    = Math.round((window.innerHeight - CANVAS.height) / 2) + 'px';
