@@ -44,7 +44,7 @@ function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
 var SELECTED_CHAR = 'kiara';
 
 // ── Constantes de física ──────────────────────────────────────
-var MOVE_SPEED   = 5;      // px/frame — mais rápido, sensação mais dinâmica
+var MOVE_SPEED   = 7;      // px/frame — velocidade ajustada
 var GRAVITY      = 0.5;
 var JUMP_FORCE   = -12;    // recalibrado pro novo tamanho de sprite
 var MAX_JUMPS    = 2;      // pulo duplo
