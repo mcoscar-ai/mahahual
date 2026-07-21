@@ -73,8 +73,7 @@ function drawBackground(zone) {
 }
 
 function updateGroundY() {
-  // Chão de terra da imagem fica em ~85% da altura do canvas
-  GROUND_Y = Math.round(CANVAS.height * 0.85);
+  GROUND_Y = Math.round(CANVAS.height * 0.90);
   if (typeof P !== 'undefined') P.y = Math.min(P.y, GROUND_Y);
 }
 
