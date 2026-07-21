@@ -85,25 +85,25 @@ function updateGroundY() {
 // ~15% da altura = personagem (proporcional em qualquer tela)
 function updateSpriteTargetHeights() {
   var h = CANVAS.height;
-  var isSmall = h < 500;
-  SPRITE_TARGET_HEIGHT.character = Math.round(h * (isSmall ? 0.22 : 0.15));
-  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * (isSmall ? 0.05 : 0.03));
-  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * (isSmall ? 0.18 : 0.12));
+  // 15% da altura do canvas = tamanho Mario Bros proporcional
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15);
+  SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
+  SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * (isSmall ? 0.20 : 0.14));
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * (isSmall ? 0.18 : 0.12));
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * (isSmall ? 0.12 : 0.09));
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * (isSmall ? 0.20 : 0.14));
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15);
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14);
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10);
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15);
   }
+  // Reposiciona inimigos existentes no novo GROUND_Y
   if (typeof ENEMIES !== 'undefined') {
     ENEMIES.forEach(function(e) {
       var cfg = ENEMY_TYPES[e.type];
       if (!cfg) return;
-      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * 0.35) : GROUND_Y;
+      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * 0.30) : GROUND_Y;
       if (!cfg.flies) e.y = GROUND_Y;
     });
   }
-  if (typeof updatePhysics === 'function') updatePhysics();
 }
 
 // ── Resize responsivo (PC e mobile) ──────────────────────────
