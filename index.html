@@ -2,12 +2,48 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Guardiões de Mahahual</title>
+
+<!-- ── Camada 2: Viewport + dvh (resolve barra do browser no mobile) ── -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<!-- ── Camada 3: PWA ── -->
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mahahual">
+<meta name="theme-color" content="#000000">
+
+<!-- Ícones Apple (tela inicial iOS) -->
+<link rel="apple-touch-icon" sizes="180x180" href="icon_180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon_152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon_120.png">
+
+<title>Guardianes de Mahahual</title>
+
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#000; overflow:hidden; }
-  #gameCanvas { display:block; touch-action:none; }
+  /* ── Camada 2: CSS tela cheia real no mobile ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html {
+    height: 100dvh; /* dvh = dynamic viewport height, resolve corte no iOS */
+    overflow: hidden;
+    background: #000;
+  }
+  body {
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    background: #000;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  #gameCanvas {
+    display: block;
+    touch-action: none;
+    image-rendering: pixelated;
+  }
 </style>
 </head>
 <body>
@@ -18,9 +54,28 @@
   <script src="js/renderer.js"></script>
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
+
   <script>
-    // renderer.js já rodou resizeCanvas() e definiu GROUND_Y corretamente
-    // agora posiciona o personagem no chão real
+    // ── Camada 2: garante que o canvas ocupa a tela inteira no iOS ──
+    function forcarTamanhoTela() {
+      document.documentElement.style.height = window.innerHeight + 'px';
+      document.body.style.height = window.innerHeight + 'px';
+    }
+    forcarTamanhoTela();
+    window.addEventListener('resize', forcarTamanhoTela);
+
+    // ── Camada 1: Fullscreen API (Chrome Android) ──
+    // Ativada no primeiro toque — funciona sem precisar de botão específico
+    var fullscreenAtivado = false;
+    document.addEventListener('touchstart', function () {
+      if (fullscreenAtivado) return;
+      fullscreenAtivado = true;
+      var el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }, { once: false, passive: true });
+
+    // ── Inicialização do jogo ──
     P.y = GROUND_Y;
 
     checkAssetsLoaded(function () {
