@@ -1,27 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
 // PLAYER.JS — Guardiões de Mahahual
-// Movimento, pulo duplo, animação e arremesso de fruta.
-// ═══════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════
-// ESCALA DE SPRITES — altura-alvo fixa (não usa o tamanho bruto do PNG)
-// Compartilhado com enemies.js — cada categoria tem uma altura-padrão
-// na tela, independente de quantos pixels o arquivo original tem.
+// Física estilo Mario Bros original, valores calculados para
+// canvas 1920×1080 (base do renderer.js)
 // ═══════════════════════════════════════════════════════════════
 
 // SPRITE_TARGET_HEIGHT declarado no renderer.js (carrega antes)
 
-// Desenha um sprite ancorado pelos PÉS (base) e centralizado horizontalmente,
-// escalado pra caber exatamente em targetHeight na tela — não importa o
-// tamanho bruto do arquivo PNG original.
+// ── Helper: desenha sprite ancorado pelos pés, escalado ────────
 function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
   if (!img || !img.complete) return null;
-  var scale = targetHeight / img.height;
-  var drawW = img.width * scale;
-  var drawH = targetHeight;
+  var scale  = targetHeight / img.height;
+  var drawW  = img.width * scale;
+  var drawH  = targetHeight;
   var screenX = worldX - cameraX - drawW / 2;
   var screenY = worldY - drawH;
-
   ctx.save();
   if (dir === -1) {
     ctx.translate(screenX + drawW, screenY);
@@ -31,102 +23,88 @@ function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
     ctx.drawImage(img, screenX, screenY, drawW, drawH);
   }
   ctx.restore();
-
-  return { width: drawW, height: drawH }; // útil pra hitbox de colisão depois
+  return { width: drawW, height: drawH };
 }
 
 // ── Personagem selecionado ────────────────────────────────────
-// TEMPORÁRIO: fixo em 'kiara' até a Tela de Seleção existir de verdade.
-var SELECTED_CHAR = 'kiara';
+var SELECTED_CHAR = 'kiara'; // fixo até a Tela de Seleção existir
 
-// ── Constantes de física ──────────────────────────────────────
-// Valores base — recalculados por updatePhysics() a cada resize do canvas
-var MOVE_SPEED   = 7;
-var GRAVITY      = 0.5;
-var JUMP_FORCE   = -12;
-var MAX_JUMPS    = 2;
-var FRUIT_SPEED  = 10;
+// ── Física estilo Mario Bros ──────────────────────────────────
+// Valores calculados para canvas 1920px de base (igual ao Mario proporcional)
+var MOVE_SPEED    = 22;    // 3px/frame × (1920/256) = ~22px/frame
+var GRAVITY       = 1.5;   // Mario pesado: queda rápida
+var JUMP_FORCE_1  = -28;   // 1º pulo: alcança ~3× a altura do personagem (~150px)
+var JUMP_FORCE_2  = -20;   // 2º pulo: 70% do primeiro
+var MAX_JUMPS     = 2;
+var FRUIT_SPEED   = 32;    // fruta mais rápida que o personagem
+var DIZZY_DURATION  = 120; // 2s a 60fps
+var THROW_COOLDOWN  = 20;  // ~0.33s entre arremessos
+var FRAME_DELAY     = 4;   // frames de jogo por frame de sprite (mais rápido = animação fluida)
 
-// Chamado pelo renderer.js a cada resize — ajusta física ao tamanho real da tela
-function updatePhysics() {
-  if (typeof CANVAS === 'undefined') return;
-  var h = CANVAS.height;
-  var w = CANVAS.width;
-  MOVE_SPEED  = Math.max(4, Math.round(w * 0.012)); // 1.2% da largura
-  FRUIT_SPEED = Math.max(6, Math.round(w * 0.018)); // 1.8% da largura
-  GRAVITY     = h * 0.0007;                          // proporcional à altura
-  JUMP_FORCE  = -Math.sqrt(2 * GRAVITY * h * 0.42); // pulo alcança 42% da altura (cobre o drone)
-}
-
-// GROUND_Y é definido e mantido pelo renderer.js (varia com o tamanho da tela)
-
-var DIZZY_DURATION   = 120;  // 2s a 60fps
-var THROW_COOLDOWN   = 24;   // 0.4s a 60fps
+// GROUND_Y é definido e mantido pelo renderer.js
 
 // ── Estado do jogador ─────────────────────────────────────────
 var P = {
-  x: 100,
-  y: GROUND_Y,
-  vx: 0,
-  vy: 0,
-  dir: 1,              // 1 = direita, -1 = esquerda
+  x: 200, y: 600,
+  vx: 0, vy: 0,
+  dir: 1,
   onGround: true,
   jumpCount: 0,
-
-  state: 'idle',        // idle | run | jump | throw | dizzy
-  frame: 0,
-  frameTimer: 0,
-
-  dizzyTimer: 0,         // >0 enquanto tonto
+  jumpKeyLatched: false,
+  state: 'idle',
+  frame: 0, frameTimer: 0,
+  dizzyTimer: 0,
   invulnerable: false,
-
-  throwTimer: 0,         // cooldown de arremesso
-  throwHoldFrames: 0      // quantos frames ainda mostrando animação de throw
+  throwTimer: 0,
+  throwHoldFrames: 0
 };
 
-var FRUITS = []; // frutas arremessadas, ativas na tela
+var FRUITS = [];
 
-// ── Contagem de frames por estado (por personagem) ────────────
-// Vem de CHAR_FRAME_COUNTS, definido no assets.js
 function frameCount(state) {
   return CHAR_FRAME_COUNTS[SELECTED_CHAR][state];
 }
 
-// ── Atualiza física + input a cada frame ──────────────────────
+// ── Update principal ──────────────────────────────────────────
 function updatePlayer() {
-  // Enquanto tonto: sem controle nenhum, só espera acabar
   if (P.dizzyTimer > 0) {
     P.dizzyTimer--;
     P.state = 'dizzy';
-    if (P.dizzyTimer === 0) {
-      P.invulnerable = false;
-      P.state = 'idle';
-    }
+    // aplica gravidade mesmo tontos (não flutua no ar)
+    P.vy += GRAVITY;
+    P.y  += P.vy;
+    if (P.y >= GROUND_Y) { P.y = GROUND_Y; P.vy = 0; P.onGround = true; }
+    if (P.dizzyTimer === 0) { P.invulnerable = false; P.state = 'idle'; }
     updateAnimation();
     return;
   }
 
-  // ── Movimento horizontal ──
+  // Horizontal
   P.vx = 0;
   if (KEYS.left)  { P.vx = -MOVE_SPEED; P.dir = -1; }
-  if (KEYS.right) { P.vx = MOVE_SPEED;  P.dir = 1; }
+  if (KEYS.right) { P.vx =  MOVE_SPEED; P.dir =  1; }
   P.x += P.vx;
+  if (P.x < 0) P.x = 0; // não sai pela esquerda
 
-  // ── Pulo (duplo) ──
+  // Pulo duplo estilo Mario
   if (KEYS.jump && !P.jumpKeyLatched) {
-    if (P.jumpCount < MAX_JUMPS) {
-      P.vy = JUMP_FORCE;
-      P.jumpCount++;
+    if (P.jumpCount === 0) {
+      P.vy = JUMP_FORCE_1;
+      P.jumpCount = 1;
       P.onGround = false;
+      if (typeof playSFX === 'function') playSFX('sfx_jump');
+    } else if (P.jumpCount === 1) {
+      P.vy = JUMP_FORCE_2; // segundo pulo: 70% do primeiro
+      P.jumpCount = 2;
       if (typeof playSFX === 'function') playSFX('sfx_jump');
     }
     P.jumpKeyLatched = true;
   }
   if (!KEYS.jump) P.jumpKeyLatched = false;
 
-  // ── Gravidade ──
+  // Gravidade
   P.vy += GRAVITY;
-  P.y += P.vy;
+  P.y  += P.vy;
   if (P.y >= GROUND_Y) {
     P.y = GROUND_Y;
     P.vy = 0;
@@ -134,32 +112,24 @@ function updatePlayer() {
     P.jumpCount = 0;
   }
 
-  // ── Arremesso de fruta ──
+  // Arremesso
   if (P.throwTimer > 0) P.throwTimer--;
   if (KEYS.throw && P.throwTimer === 0) {
     throwFruit();
     P.throwTimer = THROW_COOLDOWN;
-    P.throwHoldFrames = 10; // mostra o frame de arremesso por um instante
+    P.throwHoldFrames = 8;
   }
   if (P.throwHoldFrames > 0) P.throwHoldFrames--;
 
-  // ── Decide o estado visual (prioridade: throw > jump > run > idle) ──
-  if (P.throwHoldFrames > 0) {
-    P.state = 'throw';
-  } else if (!P.onGround) {
-    P.state = 'jump';
-  } else if (P.vx !== 0) {
-    P.state = 'run';
-  } else {
-    P.state = 'idle';
-  }
+  // Estado visual
+  if (P.throwHoldFrames > 0)  P.state = 'throw';
+  else if (!P.onGround)        P.state = 'jump';
+  else if (P.vx !== 0)         P.state = 'run';
+  else                          P.state = 'idle';
 
   updateAnimation();
   updateFruits();
 }
-
-// ── Avança a animação (troca de frame no tempo certo) ──────────
-var FRAME_DELAY = 6; // frames de jogo por frame de sprite (quanto maior, mais devagar a animação)
 
 function updateAnimation() {
   P.frameTimer++;
@@ -169,12 +139,12 @@ function updateAnimation() {
   }
 }
 
-// ── Arremessa a fruta do personagem atual, em linha reta ────────
 function throwFruit() {
-  var fruitType = CHARACTER_FRUIT[SELECTED_CHAR]; // 'mango' | 'pitaya' | 'coco'
+  var fruitType = CHARACTER_FRUIT[SELECTED_CHAR];
+  var charH = SPRITE_TARGET_HEIGHT.character;
   FRUITS.push({
-    x: P.x,
-    y: P.y - 60,           // altura aproximada da mão
+    x: P.x + (P.dir * charH * 0.3),
+    y: P.y - charH * 0.55,
     dir: P.dir,
     type: fruitType,
     frame: 0,
@@ -183,7 +153,6 @@ function throwFruit() {
   if (typeof playSFX === 'function') playSFX('sfx_throw');
 }
 
-// ── Move as frutas ativas na tela (colisão com inimigos fica no enemies.js) ──
 function updateFruits() {
   for (var i = FRUITS.length - 1; i >= 0; i--) {
     var f = FRUITS[i];
@@ -191,26 +160,20 @@ function updateFruits() {
     f.frameTimer++;
     if (f.frameTimer >= FRAME_DELAY) {
       f.frameTimer = 0;
-      f.frame = (f.frame + 1) % 4; // frutas têm sempre 4 frames
+      f.frame = (f.frame + 1) % 4;
     }
-    // remove fruta se sair muito longe da tela (ajustável quando o renderer.js
-    // definir a câmera de verdade)
-    if (f.x < P.x - 2000 || f.x > P.x + 2000) {
-      FRUITS.splice(i, 1);
-    }
+    if (Math.abs(f.x - P.x) > 1920) FRUITS.splice(i, 1);
   }
 }
 
-// ── Chamado pelo enemies.js quando o jogador é atingido ─────────
 function playerGetHit() {
-  if (P.invulnerable || P.dizzyTimer > 0) return; // já tonto, ignora novo hit
+  if (P.invulnerable || P.dizzyTimer > 0) return;
   P.dizzyTimer = DIZZY_DURATION;
   P.invulnerable = true;
   P.frame = 0;
   if (typeof playSFX === 'function') playSFX('sfx_dizzy');
 }
 
-// ── Desenha o personagem (ancorado pelos pés, centralizado, escalado) ──
 function drawPlayer(ctx, cameraX) {
   var n = P.frame + 1;
   var nStr = n < 10 ? '0' + n : '' + n;
@@ -218,12 +181,14 @@ function drawPlayer(ctx, cameraX) {
   drawSprite(ctx, img, P.x, P.y, SPRITE_TARGET_HEIGHT.character, P.dir, cameraX);
 }
 
-// ── Desenha as frutas ativas ──────────────────────────────────
 function drawFruits(ctx, cameraX) {
-  FRUITS.forEach(function (f) {
+  FRUITS.forEach(function(f) {
     var n = f.frame + 1;
     var nStr = n < 10 ? '0' + n : '' + n;
     var img = IMAGES[f.type + '_' + nStr];
     drawSprite(ctx, img, f.x, f.y, SPRITE_TARGET_HEIGHT.fruit, f.dir, cameraX);
   });
 }
+
+// Stub para o renderer.js não quebrar (não usa mais updatePhysics)
+function updatePhysics() {}
