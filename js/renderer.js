@@ -25,7 +25,7 @@ var CAM = { x: 0 }; // posição horizontal da câmera no mundo
 function updateCamera() {
   var screenW = CANVAS.width;
   // Kiara fica a 35% da tela (não 50%) — dá mais espaço à frente pra ver inimigos chegando
-  var targetX = P.x - screenW * 0.35;
+  var targetX = P.x - screenW * 0.38; // levemente à esquerda do centro
   targetX = Math.max(0, targetX);
   targetX = Math.min(WORLD_WIDTH - screenW, targetX);
   CAM.x += (targetX - CAM.x) * 0.12;
