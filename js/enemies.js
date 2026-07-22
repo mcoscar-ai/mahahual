@@ -257,6 +257,7 @@ function checkFruitCollision(e, cfg) {
         e.defeated = true;
         e.frame = 0;
         e.frameTimer = 0;
+        if (typeof addScore === 'function') addScore(20); // inimigo derrotado
       }
       break;
     }
