@@ -322,15 +322,21 @@ function gameLoop() {
     pollAdvanceInput();
   }
 
-  render(GAME.zone);
-
-  if (GAME.state !== 'playing') drawTransitionScreen();
+  if (GAME.state === 'playing') {
+    render(GAME.zone);
+  } else if (typeof drawScreen === 'function' && drawScreen()) {
+    // screens.js desenhou a tela atual (title/select/zone_complete/win)
+  } else {
+    render(GAME.zone);
+    drawTransitionScreen(); // fallback provisório
+  }
 
   requestAnimationFrame(gameLoop);
 }
 
 // ── Boot ─────────────────────────────────────────────────────
 function startGame() {
+  GAME.state = 'title';
   // O renderer.js roda resizeCanvas() ao carregar, mas nessa hora o
   // enemies.js ainda não existe — então o bloco que recalcula os
   // tamanhos dos inimigos é pulado e eles ficam com os valores
@@ -341,6 +347,8 @@ function startGame() {
 
   P.y = GROUND_Y;
   LAST_WORLD_CANVAS_W = CANVAS.width;
-  startZone(1);
+  // NÃO inicia a zona aqui — o jogo abre na tela de título. A zona só
+  // começa quando o jogador escolhe o personagem (screens.js chama
+  // startZone a partir da tela de seleção).
   requestAnimationFrame(gameLoop);
 }
