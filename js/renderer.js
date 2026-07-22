@@ -25,19 +25,25 @@ var CTX = CANVAS.getContext('2d');
 // "espaço de tela": a velocidade que aparece pro jogador é sempre
 // cfg.speed, independente da Kiara estar parada, andando ou voltando.
 // Técnica emprestada dos shoot-'em-ups (inimigos em screen space).
+//
+// SEM LERP de propósito: com lerp a Kiara "escapa" pra frente na tela
+// enquanto a câmera corre atrás, e a taxa de aproximação dela com o
+// inimigo volta a variar. Travando a câmera nela, a posição dela na
+// tela fica fixa e a aproximação fica sempre igual.
+//
 // IMPORTANTE: updateCamera() precisa rodar DEPOIS de updatePlayer()
-// no loop principal, senão CAM.dx fica defasado 1 frame e a
-// compensação não fecha.
+// no loop principal, senão CAM.dx fica defasado 1 frame.
 var CAM = { x: 0, dx: 0 };
+
+var CAM_PLAYER_SCREEN_POS = 0.28; // Kiara a 28% da tela — bastante espaço à frente pra ver o que vem
 
 function updateCamera() {
   var screenW = CANVAS.width;
   var prevX = CAM.x;
-  // Kiara fica a 38% da tela — dá mais espaço à frente pra ver inimigos chegando
-  var targetX = P.x - screenW * 0.38;
+  var targetX = P.x - screenW * CAM_PLAYER_SCREEN_POS;
   targetX = Math.max(0, targetX);
   targetX = Math.min(WORLD_WIDTH - screenW, targetX);
-  CAM.x += (targetX - CAM.x) * 0.2;
+  CAM.x = targetX;           // trava exata, sem lerp
   CAM.dx = CAM.x - prevX;
 }
 
@@ -104,7 +110,7 @@ function updateSpriteTargetHeights() {
   if (typeof ENEMY_TYPES !== 'undefined') {
     ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15 * (4/3));
     ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14 * (4/3));
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10 * (4/3));
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.075); // menor: fica mais legível no ar
     ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15 * (4/3));
 
     // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
@@ -121,7 +127,7 @@ function updateSpriteTargetHeights() {
     ENEMIES.forEach(function(e) {
       var cfg = ENEMY_TYPES[e.type];
       if (!cfg) return;
-      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * 0.30) : GROUND_Y;
+      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * (typeof DRONE_HOVER_PCT !== 'undefined' ? DRONE_HOVER_PCT : 0.17)) : GROUND_Y;
       if (!cfg.flies) e.y = GROUND_Y;
     });
   }
