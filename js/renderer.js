@@ -113,10 +113,10 @@ function updateSpriteTargetHeights() {
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15 * (4/3));
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14 * (4/3));
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.075); // menor: fica mais legível no ar
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15 * (4/3));
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15);
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14);
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.055); // bem menor: fica leve no ar
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15);
 
     // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
     // proporcional em qualquer tela (celular sem fullscreen, tablet, etc.)
@@ -132,7 +132,7 @@ function updateSpriteTargetHeights() {
     ENEMIES.forEach(function(e) {
       var cfg = ENEMY_TYPES[e.type];
       if (!cfg) return;
-      e.baseY = cfg.flies ? GROUND_Y - Math.round(CANVAS.height * (typeof DRONE_HOVER_PCT !== 'undefined' ? DRONE_HOVER_PCT : 0.17)) : GROUND_Y;
+      e.baseY = cfg.flies && typeof droneHoverOffset === 'function' ? GROUND_Y - droneHoverOffset() : GROUND_Y;
       if (!cfg.flies) e.y = GROUND_Y;
     });
   }
