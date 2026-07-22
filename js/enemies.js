@@ -111,7 +111,7 @@ function updateEnemies() {
         var distToPlayer = P.x - e.x;
         e.dir = distToPlayer >= 0 ? 1 : -1;
         if (Math.abs(distToPlayer) > 80) {
-          e.x += cfg.speed * e.dir;
+          e.x += cfg.speed * e.dir + CAM.dx;
         }
         // A cada ~5s mergulha em direção à Kiara (swoop rápido)
         if (e.actionTimer <= 0) {
@@ -130,7 +130,7 @@ function updateEnemies() {
           e.droneMode = 'patrol';
           e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35); // sobe bem
         } else {
-          e.x += (dxSwoop / dist) * cfg.speed * 3;
+          e.x += (dxSwoop / dist) * cfg.speed * 3 + CAM.dx;
           e.y += (dySwoop / dist) * cfg.speed * 3;
           e.dir = dxSwoop >= 0 ? 1 : -1;
         }
@@ -142,7 +142,7 @@ function updateEnemies() {
         e.dir = -1; // sempre vem da direita
         e.truckDirSet = true;
       }
-      e.x += cfg.speed * e.dir;
+      e.x += cfg.speed * e.dir + CAM.dx;
       // se sair muito longe da Kiara, reseta na direita pra fazer nova passagem
       if (P.x - e.x > 2000) {
         e.x = P.x + 1200;
@@ -150,7 +150,7 @@ function updateEnemies() {
       }
     } else if (e.leaving) {
       // JÁ TOCOU a Kiara: segue o caminho reto pra sempre
-      e.x += cfg.speed * e.dir;
+      e.x += cfg.speed * e.dir + CAM.dx;
       if (Math.abs(P.x - e.x) > 2500) e.removed = true;
     } else {
       // Persegue sempre — re-mira a cada frame independente da distância
@@ -159,7 +159,7 @@ function updateEnemies() {
       if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
         e.dir = distToPlayer >= 0 ? 1 : -1;
       }
-      e.x += cfg.speed * e.dir;
+      e.x += cfg.speed * e.dir + CAM.dx;
     }
 
     // ── Ação periódica (drone solta barril / robô planta placa) ──

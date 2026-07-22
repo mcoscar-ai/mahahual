@@ -20,15 +20,17 @@ var CANVAS = document.getElementById('gameCanvas');
 var CTX = CANVAS.getContext('2d');
 
 // ── Câmera ───────────────────────────────────────────────────
-var CAM = { x: 0 }; // posição horizontal da câmera no mundo
+var CAM = { x: 0, dx: 0 }; // dx = quanto a câmera se moveu NESTE frame (pra compensar inimigos)
 
 function updateCamera() {
   var screenW = CANVAS.width;
+  var prevX = CAM.x;
   // Kiara fica a 35% da tela (não 50%) — dá mais espaço à frente pra ver inimigos chegando
   var targetX = P.x - screenW * 0.38; // levemente à esquerda do centro
   targetX = Math.max(0, targetX);
   targetX = Math.min(WORLD_WIDTH - screenW, targetX);
   CAM.x += (targetX - CAM.x) * 0.12;
+  CAM.dx = CAM.x - prevX;
 }
 
 // ── Parallax de background ────────────────────────────────────
@@ -88,7 +90,7 @@ function updateSpriteTargetHeights() {
   // 15% da altura do canvas = tamanho Mario Bros proporcional
   // No celular os personagens ficam 15% maiores (mais fáceis de ver/tocar)
   var charMultiplier = (typeof IS_MOBILE !== 'undefined' && IS_MOBILE) ? 1.15 : 1;
-  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.15 * charMultiplier);
+  SPRITE_TARGET_HEIGHT.character = Math.round(h * 0.17 * charMultiplier);
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
