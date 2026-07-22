@@ -29,16 +29,37 @@ function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
 // ── Personagem selecionado ────────────────────────────────────
 var SELECTED_CHAR = 'kiara';
 
-// ── Física calibrada ──────────────────────────────────────────
-var MOVE_SPEED   = 6;    // moderado
-var GRAVITY      = 0.6;  // pulo médio
-var JUMP_FORCE_1 = -14;  // 1º pulo
-var JUMP_FORCE_2 = -10;  // 2º pulo (70% do primeiro)
+// ── Física calibrada (valores BASE, para canvas 1920x1080) ────
+// Os valores efetivos são recalculados a cada frame proporcionalmente
+// ao tamanho atual do canvas — mesmo motivo das velocidades dos
+// inimigos: sem isso o pulo fica curto no PC e gigante no celular.
+var MOVE_SPEED_BASE   = 6;    // moderado
+var GRAVITY_BASE      = 0.6;  // pulo médio
+var JUMP_FORCE_1_BASE = -14;  // 1º pulo
+var JUMP_FORCE_2_BASE = -10;  // 2º pulo (70% do primeiro)
+var FRUIT_SPEED_BASE  = 10;
+
+// Valores efetivos (atualizados por updatePhysicsScale())
+var MOVE_SPEED   = MOVE_SPEED_BASE;
+var GRAVITY      = GRAVITY_BASE;
+var JUMP_FORCE_1 = JUMP_FORCE_1_BASE;
+var JUMP_FORCE_2 = JUMP_FORCE_2_BASE;
+var FRUIT_SPEED  = FRUIT_SPEED_BASE;
+
 var MAX_JUMPS    = 2;
-var FRUIT_SPEED  = 10;
 var DIZZY_DURATION  = 120; // 2s a 60fps
 var THROW_COOLDOWN  = 20;
 var FRAME_DELAY     = 6;
+
+function updatePhysicsScale() {
+  var sx = CANVAS.width  / 1920;  // horizontal escala pela largura
+  var sy = CANVAS.height / 1080;  // vertical escala pela altura
+  MOVE_SPEED   = MOVE_SPEED_BASE   * sx;
+  FRUIT_SPEED  = FRUIT_SPEED_BASE  * sx;
+  GRAVITY      = GRAVITY_BASE      * sy;
+  JUMP_FORCE_1 = JUMP_FORCE_1_BASE * sy;
+  JUMP_FORCE_2 = JUMP_FORCE_2_BASE * sy;
+}
 
 // GROUND_Y definido pelo renderer.js
 
@@ -66,6 +87,8 @@ function frameCount(state) {
 
 // ── Update principal ──────────────────────────────────────────
 function updatePlayer() {
+  updatePhysicsScale(); // mantém pulo/velocidade proporcionais ao canvas atual
+
   // Tonto: sem controle, gravidade continua aplicada
   if (P.dizzyTimer > 0) {
     P.dizzyTimer--;
