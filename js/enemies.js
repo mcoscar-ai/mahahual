@@ -65,11 +65,19 @@ function droneHoverOffset() {
   if (typeof JUMP_FORCE_1 === 'undefined' || typeof GRAVITY === 'undefined') {
     return Math.round(CANVAS.height * 0.30); // fallback antes do player.js carregar
   }
+  // A escala da física só é aplicada dentro do updatePlayer(), que ainda
+  // não rodou quando os inimigos nascem. Sem isto, o cálculo usa pixels
+  // absolutos e o drone vai parar ACIMA da tela em canvas pequeno (celular).
+  if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
   var jumpH  = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY); // ápice do pulo simples
   var charH  = SPRITE_TARGET_HEIGHT.character;
   var droneH = ENEMY_TYPES.drone.targetHeight;
   var chestOffset = charH * 0.55;  // mesma altura usada em throwFruit()
-  return Math.round(jumpH + chestOffset - droneH / 2);
+  var off = jumpH + chestOffset - droneH / 2;
+  // nunca deixa o drone sair pela borda de cima
+  var maxOff = GROUND_Y - CANVAS.height * 0.10;
+  if (off > maxOff) off = maxOff;
+  return Math.round(off);
 }
 
 var ENEMIES = []; // todos os inimigos ativos no mundo
