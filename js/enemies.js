@@ -203,11 +203,20 @@ function updateEnemies() {
     // Robô: finca placa como aviso antes de continuar avançando.
     e.actionTimer--;
     if (e.actionTimer <= 0) {
-      if (e.type === 'robot') {
+      if (e.type === 'robot' && Math.abs(P.x - e.x) < CANVAS.width * 0.6) {
         e.state = 'sign_plant';
         e.frame = 0;
+        e.plantouPlaca = false; // a placa nasce no meio da animação
       }
       e.actionTimer = 240 + Math.floor(Math.random() * 180); // próxima ação em 4-7s
+    }
+
+    // A placa aparece no meio da animação de fincar, não no começo —
+    // fica coerente com o gesto do robô.
+    if (e.type === 'robot' && e.state === 'sign_plant' && !e.plantouPlaca &&
+        e.frame >= 2 && typeof spawnPlaca === 'function') {
+      spawnPlaca(e.x + (e.dir >= 0 ? 1 : -1) * SPRITE_TARGET_HEIGHT.character * 0.4);
+      e.plantouPlaca = true;
     }
 
     // volta ao estado padrão quando a animação de ação termina
@@ -415,21 +424,8 @@ function updateBarris() {
     var bLeft = b.x - bw, bRight = b.x + bw;
     var bTop = b.y - alt, bBottom = b.y;
 
-    // fruta destrói o barril
-    var quebrou = false;
-    for (var f = FRUITS.length - 1; f >= 0; f--) {
-      var fr = FRUITS[f];
-      var fs = SPRITE_TARGET_HEIGHT.fruit;
-      if (fr.x + fs / 2 > bLeft && fr.x - fs / 2 < bRight &&
-          fr.y + fs / 2 > bTop && fr.y - fs / 2 < bBottom) {
-        FRUITS.splice(f, 1);
-        b.removed = true;
-        quebrou = true;
-        if (typeof addScore === 'function') addScore(15);
-        break;
-      }
-    }
-    if (quebrou) continue;
+    // O barril é OBSTÁCULO, não alvo: fruta não destrói (estilo Donkey
+    // Kong). A resposta certa é pular por cima.
 
     // encostou na Kiara
     var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.25;
@@ -450,4 +446,139 @@ function drawBarris(ctx, cameraX) {
     if (!d.img) continue;
     drawSprite(ctx, d.img, b.x, b.y, barrilAltura(), b.dir, cameraX);
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// PLACAS — fincadas pelo robô plaqueiro
+// Obstáculo parado: a Kiara pula por cima ou derruba com a fruta (+30).
+// Desenhadas por código (não existe sprite da placa isolada no
+// repositório — só dentro dos quadros do robot_sign_plant). Se depois
+// surgir a arte, é só trocar o desenho de drawPlacas pelo sprite.
+// ═══════════════════════════════════════════════════════════════
+
+var PLACAS = [];
+var PLACA_MAX = 6;             // teto de placas vivas ao mesmo tempo
+var PLACA_HEIGHT_PCT = 0.135;  // altura total (poste + tábua), % da tela
+
+function placaAltura() {
+  return Math.round(CANVAS.height * PLACA_HEIGHT_PCT);
+}
+
+function spawnPlaca(x) {
+  if (PLACAS.length >= PLACA_MAX) return;
+  // evita duas placas praticamente no mesmo ponto
+  for (var i = 0; i < PLACAS.length; i++) {
+    if (Math.abs(PLACAS[i].x - x) < placaAltura() * 0.8) return;
+  }
+  PLACAS.push({ x: x, caindo: false, quedaTimer: 0, dirQueda: 1, removed: false });
+}
+
+function updatePlacas() {
+  var alt = placaAltura();
+  var meiaLarg = alt * 0.42;
+
+  for (var i = PLACAS.length - 1; i >= 0; i--) {
+    var pl = PLACAS[i];
+    if (pl.removed) { PLACAS.splice(i, 1); continue; }
+
+    if (pl.caindo) {
+      pl.quedaTimer++;
+      if (pl.quedaTimer > 34) pl.removed = true;
+      continue;
+    }
+
+    if (Math.abs(P.x - pl.x) > CANVAS.width * 1.8) { pl.removed = true; continue; }
+
+    var plLeft = pl.x - meiaLarg, plRight = pl.x + meiaLarg;
+    var plTop = GROUND_Y - alt, plBottom = GROUND_Y;
+
+    // fruta derruba a placa
+    var derrubou = false;
+    for (var f = FRUITS.length - 1; f >= 0; f--) {
+      var fr = FRUITS[f];
+      var fs = SPRITE_TARGET_HEIGHT.fruit;
+      if (fr.x + fs / 2 > plLeft && fr.x - fs / 2 < plRight &&
+          fr.y + fs / 2 > plTop && fr.y - fs / 2 < plBottom) {
+        FRUITS.splice(f, 1);
+        pl.caindo = true;
+        pl.quedaTimer = 0;
+        pl.dirQueda = (fr.dir >= 0) ? 1 : -1;
+        if (typeof addScore === 'function') addScore(30);
+        derrubou = true;
+        break;
+      }
+    }
+    if (derrubou) continue;
+
+    // encostou na Kiara
+    var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pRight = P.x + SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pTop = P.y - SPRITE_TARGET_HEIGHT.character;
+    var pBottom = P.y;
+    if (pRight > plLeft && pLeft < plRight && pBottom > plTop && pTop < plBottom) {
+      playerGetHit();
+    }
+  }
+}
+
+function drawPlacas(ctx, cameraX) {
+  var alt = placaAltura();
+
+  for (var i = 0; i < PLACAS.length; i++) {
+    var pl = PLACAS[i];
+    var sx = pl.x - cameraX;
+    if (sx < -alt * 2 || sx > CANVAS.width + alt * 2) continue;
+
+    ctx.save();
+    ctx.translate(sx, GROUND_Y);
+
+    if (pl.caindo) {
+      var t = pl.quedaTimer / 34;
+      ctx.rotate(pl.dirQueda * t * (Math.PI / 2.1)); // tomba pro lado
+      ctx.globalAlpha = 1 - t * 0.65;
+    }
+
+    var posteW = Math.max(3, alt * 0.10);
+    var tabuaW = alt * 0.84;
+    var tabuaH = alt * 0.40;
+    var tabuaY = -alt;
+
+    // poste
+    ctx.fillStyle = '#8a5a2b';
+    ctx.fillRect(-posteW / 2, -alt * 0.62, posteW, alt * 0.62);
+    ctx.fillStyle = '#6d4520';
+    ctx.fillRect(-posteW / 2, -alt * 0.62, posteW * 0.35, alt * 0.62);
+
+    // tábua
+    ctx.fillStyle = '#d9a05b';
+    ctx.fillRect(-tabuaW / 2, tabuaY, tabuaW, tabuaH);
+    ctx.strokeStyle = '#8a5a2b';
+    ctx.lineWidth = Math.max(2, alt * 0.035);
+    ctx.strokeRect(-tabuaW / 2, tabuaY, tabuaW, tabuaH);
+
+    // arvorezinha desenhada na tábua
+    var cxA = -tabuaW * 0.14;
+    var baseA = tabuaY + tabuaH * 0.78;
+    ctx.fillStyle = '#5c3b1a';
+    ctx.fillRect(cxA - tabuaH * 0.05, baseA - tabuaH * 0.18, tabuaH * 0.10, tabuaH * 0.20);
+    ctx.fillStyle = '#3f8f3a';
+    ctx.beginPath();
+    ctx.moveTo(cxA, tabuaY + tabuaH * 0.18);
+    ctx.lineTo(cxA + tabuaH * 0.26, baseA - tabuaH * 0.16);
+    ctx.lineTo(cxA - tabuaH * 0.26, baseA - tabuaH * 0.16);
+    ctx.closePath();
+    ctx.fill();
+
+    // risco vermelho de proibido
+    ctx.strokeStyle = '#d8352a';
+    ctx.lineWidth = Math.max(3, alt * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(-tabuaW * 0.36, tabuaY + tabuaH * 0.80);
+    ctx.lineTo(tabuaW * 0.36, tabuaY + tabuaH * 0.20);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
