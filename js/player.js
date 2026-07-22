@@ -54,11 +54,14 @@ var FRAME_DELAY     = 6;
 function updatePhysicsScale() {
   var sx = CANVAS.width  / 1920;  // horizontal escala pela largura
   var sy = CANVAS.height / 1080;  // vertical escala pela altura
-  MOVE_SPEED   = MOVE_SPEED_BASE   * sx;
+  // Multiplicadores do personagem escolhido (screens.js). 1 por padrão.
+  var cs = (typeof CHAR_SPEED_MULT !== 'undefined') ? CHAR_SPEED_MULT : 1;
+  var cj = (typeof CHAR_JUMP_MULT !== 'undefined') ? CHAR_JUMP_MULT : 1;
+  MOVE_SPEED   = MOVE_SPEED_BASE   * sx * cs;
   FRUIT_SPEED  = FRUIT_SPEED_BASE  * sx;
   GRAVITY      = GRAVITY_BASE      * sy;
-  JUMP_FORCE_1 = JUMP_FORCE_1_BASE * sy;
-  JUMP_FORCE_2 = JUMP_FORCE_2_BASE * sy;
+  JUMP_FORCE_1 = JUMP_FORCE_1_BASE * sy * cj;
+  JUMP_FORCE_2 = JUMP_FORCE_2_BASE * sy * cj;
 }
 
 // GROUND_Y definido pelo renderer.js
@@ -118,6 +121,7 @@ function updatePlayer() {
     } else if (P.jumpCount === 1) {
       P.vy = JUMP_FORCE_2;
       P.jumpCount = 2;
+      P.spin = (SELECTED_CHAR === 'thiago') ? 1 : 0; // Thiago gira no pulo duplo
       if (typeof playSFX === 'function') playSFX('sfx_jump');
     }
     P.jumpKeyLatched = true;
@@ -127,11 +131,21 @@ function updatePlayer() {
   // Gravidade
   P.vy += GRAVITY;
   P.y  += P.vy;
+
+  // Giro do Thiago no pulo duplo: uma volta completa durante o voo.
+  // Só afeta o DESENHO (drawPlayer) — a colisão continua reta.
+  if (P.spin) {
+    P.spinAngle = (P.spinAngle || 0) + 0.32; // ~1 volta em ~20 frames
+    if (P.spinAngle >= Math.PI * 2) { P.spinAngle = 0; P.spin = 0; }
+  }
+
   if (P.y >= GROUND_Y) {
     P.y = GROUND_Y;
     P.vy = 0;
     P.onGround = true;
     P.jumpCount = 0;
+    P.spin = 0;
+    P.spinAngle = 0;
   }
 
   // Arremesso
@@ -199,6 +213,24 @@ function drawPlayer(ctx, cameraX) {
   var n = P.frame + 1;
   var nStr = n < 10 ? '0' + n : '' + n;
   var img = IMAGES[SELECTED_CHAR + '_' + P.state + '_' + nStr];
+
+  // Giro do Thiago: rotaciona o desenho em torno do próprio centro,
+  // sem mexer na colisão. Se não estiver girando, desenho normal.
+  if (P.spin && P.spinAngle && img && img.complete) {
+    var h = SPRITE_TARGET_HEIGHT.character;
+    var scale = h / img.height;
+    var w = img.width * scale;
+    var cx = P.x - cameraX;
+    var cy = P.y - h / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(P.dir * P.spinAngle); // gira no sentido da corrida
+    if (P.dir === -1) ctx.scale(-1, 1);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+    return;
+  }
+
   drawSprite(ctx, img, P.x, P.y, SPRITE_TARGET_HEIGHT.character, P.dir, cameraX);
 }
 
