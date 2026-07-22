@@ -30,6 +30,11 @@ function spawnZoneItems(zone, worldWidth) {
   ITENS.length = 0;
   ITEM_POPUPS.length = 0;
 
+  // Mesma armadilha do drone: a física só ganha escala dentro do
+  // updatePlayer(). Sem isto, o lixo aéreo nasce em altura absoluta e
+  // fica inalcançável no celular.
+  if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
+
   var larguraTela = CANVAS.width;
   var pos = larguraTela * 0.8;
   var limite = worldWidth - larguraTela * 1.2;
