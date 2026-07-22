@@ -59,12 +59,10 @@ var ZONE_BACKGROUNDS = {
   3: 'bg_zona3'
 };
 
-// Com a câmera travada na Kiara e os inimigos em velocidade de tela
-// constante, o FUNDO é a única pista visual de que ela está andando.
-// Com 0.15 o cenário quase não saía do lugar e o jogo parecia lento
-// por mais rápida que fosse a Kiara. 0.6 dá sensação clara de avanço
-// e ainda mantém profundidade (fundo mais lento que o primeiro plano).
-var PARALLAX_FACTOR = 0.6;
+// O FUNDO é a camada distante (montanhas/selva ao longe): rola devagar,
+// só pra dar profundidade. Quem transmite velocidade e serve de
+// referência pro olho é a camada de CHÃO, que rola a 1.0 (ver drawGround).
+var PARALLAX_FACTOR = 0.4;
 
 function drawBackground(zone) {
   var imgKey = ZONE_BACKGROUNDS[zone] || 'bg_zona1';
@@ -94,6 +92,79 @@ function drawBackground(zone) {
   while (x < cw) {
     CTX.drawImage(img, x, offsetY, drawW, drawH);
     x += drawW;
+  }
+}
+
+
+// ── Camada de CHÃO (parallax 1.0) ────────────────────────────
+// Esta é a peça que faltava. No Mario, o chão/canos/blocos rolam a
+// exatamente a velocidade da câmera, e é contra ESSE chão que o olho
+// mede a velocidade dos inimigos. Sem essa camada, os inimigos parecem
+// acelerar e desacelerar conforme a Kiara corre, porque a única
+// referência era o fundo distante (que rola mais devagar).
+// Desenhado por código: não existe asset de solo no projeto.
+
+var GROUND_PALETTE = {
+  1: { top: '#efdcae', bottom: '#c9a76a', edge: '#8a6b3a', grass: '#7fa650', stone: '#b9b2a4' },
+  2: { top: '#d8c79a', bottom: '#a68a58', edge: '#6f5a33', grass: '#5f8a3c', stone: '#a9a294' },
+  3: { top: '#c4b18c', bottom: '#8e7852', edge: '#5c4a2c', grass: '#4f7a34', stone: '#9a9386' }
+};
+
+function drawGroundProp(sx, y, kind, pal, unit) {
+  if (kind === 0) {
+    // tufo de grama
+    CTX.fillStyle = pal.grass;
+    for (var i = -1; i <= 1; i++) {
+      CTX.beginPath();
+      CTX.moveTo(sx + i * unit * 0.5, y);
+      CTX.lineTo(sx + i * unit * 0.5 + unit * 0.22, y - unit * (1.1 - Math.abs(i) * 0.35));
+      CTX.lineTo(sx + i * unit * 0.5 + unit * 0.42, y);
+      CTX.closePath();
+      CTX.fill();
+    }
+  } else if (kind === 1) {
+    // pedrinha
+    CTX.fillStyle = pal.stone;
+    CTX.beginPath();
+    CTX.ellipse(sx, y - unit * 0.18, unit * 0.55, unit * 0.32, 0, 0, Math.PI * 2);
+    CTX.fill();
+  } else {
+    // marca no solo (sulco), reforça a sensação de rolagem
+    CTX.fillStyle = pal.edge;
+    CTX.globalAlpha = 0.25;
+    CTX.fillRect(sx, y + unit * 0.55, unit * 1.6, Math.max(2, unit * 0.14));
+    CTX.globalAlpha = 1;
+  }
+}
+
+function drawGround(zone) {
+  var pal = GROUND_PALETTE[zone] || GROUND_PALETTE[1];
+  var y = GROUND_Y;
+  var h = CANVAS.height - y;
+  if (h <= 0) return;
+
+  var grad = CTX.createLinearGradient(0, y, 0, CANVAS.height);
+  grad.addColorStop(0, pal.top);
+  grad.addColorStop(1, pal.bottom);
+  CTX.fillStyle = grad;
+  CTX.fillRect(0, y, CANVAS.width, h);
+
+  CTX.fillStyle = pal.edge;
+  CTX.fillRect(0, y, CANVAS.width, Math.max(2, Math.round(CANVAS.height * 0.007)));
+
+  // Elementos repetidos em posições FIXAS do mundo, desenhados sem
+  // nenhum fator de redução => rolam 1:1 com a câmera.
+  var unit    = Math.round(CANVAS.height * 0.035);
+  var spacing = Math.round(CANVAS.width * 0.11);
+  if (spacing < 1) return;
+  var firstIdx = Math.floor(CAM.x / spacing) - 1;
+  var lastIdx  = firstIdx + Math.ceil(CANVAS.width / spacing) + 2;
+
+  for (var i = firstIdx; i <= lastIdx; i++) {
+    var noise = (i * 7919) % 97;              // pseudo-aleatório determinístico
+    var worldX = i * spacing + (noise - 48);  // varia a posição sem "piscar"
+    var screenX = worldX - CAM.x;             // <<< parallax 1.0, sem multiplicador
+    drawGroundProp(screenX, y, noise % 3, pal, unit);
   }
 }
 
@@ -167,6 +238,7 @@ resizeCanvas(); // chama uma vez ao carregar
 function render(zone) {
   CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
   drawBackground(zone || 1);
+  drawGround(zone || 1);
   if (typeof drawEnemies  === 'function') drawEnemies(CTX, CAM.x);
   if (typeof drawFruits   === 'function') drawFruits(CTX, CAM.x);
   if (typeof drawPlayer   === 'function') drawPlayer(CTX, CAM.x);
