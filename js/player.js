@@ -33,11 +33,11 @@ var SELECTED_CHAR = 'kiara';
 // Os valores efetivos são recalculados a cada frame proporcionalmente
 // ao tamanho atual do canvas — mesmo motivo das velocidades dos
 // inimigos: sem isso o pulo fica curto no PC e gigante no celular.
-var MOVE_SPEED_BASE   = 6;    // moderado
+var MOVE_SPEED_BASE   = 9;    // base p/ 1920 de largura (~6px num canvas típico de 75%)
 var GRAVITY_BASE      = 0.6;  // pulo médio
-var JUMP_FORCE_1_BASE = -14;  // 1º pulo
-var JUMP_FORCE_2_BASE = -10;  // 2º pulo (70% do primeiro)
-var FRUIT_SPEED_BASE  = 10;
+var JUMP_FORCE_1_BASE = -19;  // 1º pulo — ~28% da altura da tela
+var JUMP_FORCE_2_BASE = -14;  // 2º pulo (70% do primeiro)
+var FRUIT_SPEED_BASE  = 15;
 
 // Valores efetivos (atualizados por updatePhysicsScale())
 var MOVE_SPEED   = MOVE_SPEED_BASE;
