@@ -170,9 +170,9 @@
       });
 
       function loop() {
-        updateCamera();
-        updatePlayer();
-        updateEnemies();
+        updatePlayer();   // 1º: move a Kiara
+        updateCamera();   // 2º: câmera reage e calcula CAM.dx deste frame
+        updateEnemies();  // 3º: inimigos compensam com CAM.dx já correto
         render(1);
         requestAnimationFrame(loop);
       }
