@@ -16,7 +16,7 @@ var ITEM_POPUPS = [];   // textos "+50" que sobem ao recolher
 
 var ITEM_TIPOS = ['botella', 'lata', 'bolsa'];
 var ITEM_FRAMES = 4;             // cada tipo tem 4 quadros
-var ITEM_HEIGHT_PCT = 0.062;     // % da altura da tela
+var ITEM_HEIGHT_PCT = 0.080;     // % da altura da tela
 var ITEM_VALOR = 50;
 
 function itemAltura() {
@@ -38,8 +38,8 @@ function spawnZoneItems(zone, worldWidth) {
   while (pos < limite) {
     var tipo = ITEM_TIPOS[Math.floor(Math.random() * ITEM_TIPOS.length)];
 
-    // ~30% do lixo flutua na altura do pulo simples
-    var flutua = (Math.random() < 0.3);
+    // ~50% do lixo flutua na altura do pulo simples
+    var flutua = (Math.random() < 0.5);
     var alturaVoo = 0;
     if (flutua && typeof JUMP_FORCE_1 !== 'undefined' && typeof GRAVITY !== 'undefined') {
       var apice = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
@@ -57,7 +57,7 @@ function spawnZoneItems(zone, worldWidth) {
       coletado: false
     });
 
-    pos += larguraTela * (0.55 + Math.random() * 0.35);
+    pos += larguraTela * (0.34 + Math.random() * 0.28);
     i++;
   }
   return i;
@@ -120,16 +120,15 @@ function drawItems(ctx, cameraX) {
 
     var iy = it.y + (it.flutua ? Math.sin(it.bobPhase) * alt * 0.15 : 0);
 
-    // brilho suave nos que flutuam, pra chamar atenção da criança
-    if (it.flutua) {
-      ctx.save();
-      ctx.globalAlpha = 0.28;
-      ctx.fillStyle = '#fff3a8';
-      ctx.beginPath();
-      ctx.arc(sx, iy - alt * 0.5, alt * 0.62, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+    // brilho suave em todo lixo, pra chamar atenção da criança
+    // (um pouco mais forte no que flutua, que é o alvo do pulo)
+    ctx.save();
+    ctx.globalAlpha = it.flutua ? 0.34 : 0.24;
+    ctx.fillStyle = '#fff3a8';
+    ctx.beginPath();
+    ctx.arc(sx, iy - alt * 0.5, alt * 0.60, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     drawSprite(ctx, img, it.x, iy, alt, 1, cameraX);
   }
