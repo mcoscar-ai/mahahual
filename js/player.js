@@ -84,6 +84,10 @@ function updatePlayer() {
   if (KEYS.right) { P.vx =  MOVE_SPEED; P.dir =  1; }
   P.x += P.vx;
   if (P.x < 0) P.x = 0;
+  // Parede invisível na borda esquerda — estilo Mario Bros: não deixa
+  // andar pra trás além do que a câmera já revelou (CAM.x é atualizada
+  // ANTES de updatePlayer() no loop principal, então já está correta aqui).
+  if (typeof CAM !== 'undefined' && P.x < CAM.x) P.x = CAM.x;
 
   // Pulo duplo
   if (KEYS.jump && !P.jumpKeyLatched) {
