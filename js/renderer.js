@@ -59,7 +59,12 @@ var ZONE_BACKGROUNDS = {
   3: 'bg_zona3'
 };
 
-var PARALLAX_FACTOR = 0.15; // mais lento = menos repetições visíveis por tela
+// Com a câmera travada na Kiara e os inimigos em velocidade de tela
+// constante, o FUNDO é a única pista visual de que ela está andando.
+// Com 0.15 o cenário quase não saía do lugar e o jogo parecia lento
+// por mais rápida que fosse a Kiara. 0.6 dá sensação clara de avanço
+// e ainda mantém profundidade (fundo mais lento que o primeiro plano).
+var PARALLAX_FACTOR = 0.6;
 
 function drawBackground(zone) {
   var imgKey = ZONE_BACKGROUNDS[zone] || 'bg_zona1';
