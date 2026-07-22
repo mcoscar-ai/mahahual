@@ -94,10 +94,10 @@ function updateSpriteTargetHeights() {
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15);
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14);
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10);
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15);
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15 * (2/3));
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14 * (2/3));
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10 * (2/3));
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15 * (2/3));
 
     // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
     // proporcional em qualquer tela (celular sem fullscreen, tablet, etc.)
