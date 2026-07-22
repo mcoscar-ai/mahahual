@@ -92,7 +92,9 @@ function spawnEnemy(type, x, groundY) {
     hitsTaken: 0,
     defeated: false,
     removed: false,
-    actionTimer: Math.floor(Math.random() * 120), // ação periódica (soltar barril / plantar placa)
+    actionTimer: Math.floor(Math.random() * 120), // ação periódica (swoop do drone / placa do robô)
+    barrelTimer: 150 + Math.floor(Math.random() * 150), // timer SEPARADO: o swoop consumia o actionTimer
+                                                        // antes do barril chegar a zero e ele nunca saía
     hoverPhase: Math.random() * Math.PI * 2         // pro movimento senoidal do drone
   });
 }
@@ -176,22 +178,36 @@ function updateEnemies() {
       if (Math.abs(distToPlayer) > RETARGET_DISTANCE) {
         e.dir = distToPlayer >= 0 ? 1 : -1;
       }
-      e.x += cfg.speed * e.dir;
+      // Robô fica PARADO enquanto finca a placa — é o aviso visual
+      // que dá à criança um instante pra se preparar.
+      if (!(e.type === 'robot' && e.state === 'sign_plant')) {
+        e.x += cfg.speed * e.dir;
+      }
     }
 
-    // ── Ação periódica (drone solta barril / robô planta placa) ──
+    // ── Ação periódica ──────────────────────────────────────────
+    // Drone: solta barril (timer próprio, senão o swoop o consome antes).
+    // Só solta em patrulha e quando está mais ou menos sobre a Kiara,
+    // pra criança ver o barril cair à frente e ter tempo de pular.
+    if (e.type === 'drone') {
+      e.barrelTimer--;
+      if (e.barrelTimer <= 0 && e.droneMode === 'patrol' &&
+          Math.abs(P.x - e.x) < CANVAS.width * 0.55) {
+        e.state = 'drop_barrel';
+        e.frame = 0;
+        if (typeof spawnBarril === 'function') spawnBarril(e.x, e.y);
+        e.barrelTimer = 300 + Math.floor(Math.random() * 240); // 5-9s
+      }
+    }
+
+    // Robô: finca placa como aviso antes de continuar avançando.
     e.actionTimer--;
     if (e.actionTimer <= 0) {
-      if (e.type === 'drone') {
-        e.state = 'drop_barrel';
-        if (typeof spawnBarril === 'function') spawnBarril(e.x, e.y);
-      } else if (e.type === 'robot') {
+      if (e.type === 'robot') {
         e.state = 'sign_plant';
+        e.frame = 0;
       }
       e.actionTimer = 240 + Math.floor(Math.random() * 180); // próxima ação em 4-7s
-      e.frame = 0;
-    } else if (e.state !== (e.type === 'bulldozer' || e.type === 'caminhao' ? 'move' : e.state)) {
-      // depois de terminar a ação periódica, volta pro estado padrão de movimento
     }
 
     // volta ao estado padrão quando a animação de ação termina
@@ -320,4 +336,118 @@ function drawEnemies(ctx, cameraX) {
     var visualDir = e.dir * cfg.drawDirFlip; // corrige orientação da arte sem mexer no movimento
     drawSprite(ctx, img, e.x, e.y, cfg.targetHeight, visualDir, cameraX);
   });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// BARRIS — projéteis soltos pelo drone
+// Caem, batem no chão e saem rolando. A Kiara pula por cima ou
+// destrói com a fruta. Encostar deixa ela tonta, como qualquer inimigo.
+// ═══════════════════════════════════════════════════════════════
+
+var BARRIS = [];
+
+var BARRIL_HEIGHT_PCT = 0.075;   // % da altura da tela
+var BARRIL_ROLL_PCT   = 3.2 / 1920; // % da largura por frame (igual às velocidades dos inimigos)
+
+function barrilAltura() {
+  return Math.round(CANVAS.height * BARRIL_HEIGHT_PCT);
+}
+
+function spawnBarril(x, y) {
+  BARRIS.push({
+    x: x,
+    y: y,
+    vy: 0,
+    dir: (P.x >= x) ? 1 : -1,   // rola em direção à Kiara
+    landed: false,
+    state: 'vazando',           // vazando (caindo) -> rolando (no chão)
+    frame: 0,
+    frameTimer: 0,
+    removed: false
+  });
+}
+
+function barrilDims(b) {
+  var alt = barrilAltura();
+  var key = (b.state === 'rolando') ? 'barril_rolando' : 'barril_vazando';
+  var n = b.frame + 1;
+  var img = IMAGES[key + '_' + (n < 10 ? '0' + n : n)];
+  if (!img || !img.complete) return { width: alt, height: alt, img: null };
+  var scale = alt / img.height;
+  return { width: img.width * scale, height: alt, img: img };
+}
+
+function updateBarris() {
+  var rollSpeed = BARRIL_ROLL_PCT * CANVAS.width;
+  var alt = barrilAltura();
+
+  for (var i = BARRIS.length - 1; i >= 0; i--) {
+    var b = BARRIS[i];
+    if (b.removed) { BARRIS.splice(i, 1); continue; }
+
+    if (!b.landed) {
+      b.vy += GRAVITY;
+      b.y += b.vy;
+      if (b.y >= GROUND_Y) {
+        b.y = GROUND_Y;
+        b.landed = true;
+        b.state = 'rolando';
+        b.frame = 0;
+        b.frameTimer = 0;
+      }
+    } else {
+      b.x += rollSpeed * b.dir;
+    }
+
+    // animação
+    var totalFrames = (b.state === 'rolando') ? 6 : 5;
+    b.frameTimer++;
+    if (b.frameTimer >= FRAME_DELAY) {
+      b.frameTimer = 0;
+      b.frame = (b.frame + 1) % totalFrames;
+    }
+
+    // some quando fica longe demais
+    if (Math.abs(P.x - b.x) > CANVAS.width * 1.6) { b.removed = true; continue; }
+
+    var bw = alt * 0.45;
+    var bLeft = b.x - bw, bRight = b.x + bw;
+    var bTop = b.y - alt, bBottom = b.y;
+
+    // fruta destrói o barril
+    var quebrou = false;
+    for (var f = FRUITS.length - 1; f >= 0; f--) {
+      var fr = FRUITS[f];
+      var fs = SPRITE_TARGET_HEIGHT.fruit;
+      if (fr.x + fs / 2 > bLeft && fr.x - fs / 2 < bRight &&
+          fr.y + fs / 2 > bTop && fr.y - fs / 2 < bBottom) {
+        FRUITS.splice(f, 1);
+        b.removed = true;
+        quebrou = true;
+        if (typeof addScore === 'function') addScore(15);
+        break;
+      }
+    }
+    if (quebrou) continue;
+
+    // encostou na Kiara
+    var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pRight = P.x + SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pTop = P.y - SPRITE_TARGET_HEIGHT.character;
+    var pBottom = P.y;
+    if (pRight > bLeft && pLeft < bRight && pBottom > bTop && pTop < bBottom) {
+      playerGetHit();
+      b.removed = true;
+    }
+  }
+}
+
+function drawBarris(ctx, cameraX) {
+  for (var i = 0; i < BARRIS.length; i++) {
+    var b = BARRIS[i];
+    var d = barrilDims(b);
+    if (!d.img) continue;
+    drawSprite(ctx, d.img, b.x, b.y, barrilAltura(), b.dir, cameraX);
+  }
 }
