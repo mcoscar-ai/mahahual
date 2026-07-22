@@ -239,11 +239,11 @@ function render(zone) {
   CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
   drawBackground(zone || 1);
   drawGround(zone || 1);
+  if (typeof drawItems    === 'function') drawItems(CTX, CAM.x);
   if (typeof drawEnemies  === 'function') drawEnemies(CTX, CAM.x);
   if (typeof drawBarris   === 'function') drawBarris(CTX, CAM.x);
   if (typeof drawPlacas   === 'function') drawPlacas(CTX, CAM.x);
   if (typeof drawFruits   === 'function') drawFruits(CTX, CAM.x);
   if (typeof drawPlayer   === 'function') drawPlayer(CTX, CAM.x);
   if (typeof drawHUD      === 'function') drawHUD(CTX);
-  if (typeof drawItems    === 'function') drawItems(CTX, CAM.x);
 }
