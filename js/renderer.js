@@ -20,17 +20,20 @@ var CANVAS = document.getElementById('gameCanvas');
 var CTX = CANVAS.getContext('2d');
 
 // ── Câmera ───────────────────────────────────────────────────
-var CAM = { x: 0, dx: 0 }; // dx = quanto a câmera se moveu NESTE frame (pra compensar inimigos)
+// Estilo Mario Bros clássico (NES): a câmera SÓ avança. Se o personagem
+// andar pra trás, a câmera fica parada — ele esbarra numa "parede
+// invisível" na borda esquerda da tela (ver clamp em player.js).
+var CAM = { x: 0 };
 
 function updateCamera() {
   var screenW = CANVAS.width;
-  var prevX = CAM.x;
-  // Kiara fica a 35% da tela (não 50%) — dá mais espaço à frente pra ver inimigos chegando
   var targetX = P.x - screenW * 0.38; // levemente à esquerda do centro
   targetX = Math.max(0, targetX);
   targetX = Math.min(WORLD_WIDTH - screenW, targetX);
-  CAM.x += (targetX - CAM.x) * 0.12;
-  CAM.dx = CAM.x - prevX;
+  if (targetX > CAM.x) {
+    CAM.x += (targetX - CAM.x) * 0.2; // só se aproxima do alvo quando ele está à frente
+  }
+  // se targetX <= CAM.x (personagem parou ou andou pra trás), a câmera NÃO se move
 }
 
 // ── Parallax de background ────────────────────────────────────
