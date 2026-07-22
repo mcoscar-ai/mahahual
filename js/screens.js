@@ -1,0 +1,238 @@
+// ═══════════════════════════════════════════════════════════════
+// SCREENS.JS — Guardiões de Mahahual
+// Tela de título, seleção de personagem e telas de transição.
+//
+// Carregado DEPOIS de game.js. Assume os estados 'title' e 'select'
+// (novos) e reaproveita 'zone_complete' e 'win' (antes desenhados
+// provisoriamente pelo game.js).
+//
+// Cada personagem tem uma fruta (já em CHARACTER_FRUIT) e um perfil
+// de física próprio, aplicado ao escolher. O Thiago gira no pulo duplo
+// (tratado no player.js).
+// ═══════════════════════════════════════════════════════════════
+
+// Perfis: multiplicadores sobre os valores base da física.
+// Diferenças pequenas, pra não confundir criança de 5-9 anos.
+var CHARACTER_PROFILES = {
+  kiara:  { speed: 1.00, jump: 1.00, label: 'Kiara',  fruta: 'Mamey',  traco: 'Equilibrada' },
+  ainhoa: { speed: 0.90, jump: 1.15, label: 'Ainhoa', fruta: 'Pitaya', traco: 'Saltadora'  },
+  thiago: { speed: 1.18, jump: 0.92, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
+};
+
+var CHAR_ORDER = ['kiara', 'ainhoa', 'thiago'];
+var selectHover = 0; // índice destacado na seleção
+
+// Aplica o perfil do personagem escolhido aos multiplicadores da física.
+// player.js multiplica os valores base por estes ao recalcular a escala.
+var CHAR_SPEED_MULT = 1;
+var CHAR_JUMP_MULT = 1;
+
+function applyCharacterProfile(nome) {
+  SELECTED_CHAR = nome;
+  var pf = CHARACTER_PROFILES[nome] || CHARACTER_PROFILES.kiara;
+  CHAR_SPEED_MULT = pf.speed;
+  CHAR_JUMP_MULT = pf.jump;
+}
+
+// ── Botões invisíveis clicáveis (title/select) ───────────────
+// Guardamos as áreas desenhadas a cada frame pra testar o toque.
+var screenButtons = [];
+
+function addButton(x, y, w, h, action) {
+  screenButtons.push({ x: x, y: y, w: w, h: h, action: action });
+}
+
+function handleScreenTap(clientX, clientY) {
+  var rect = CANVAS.getBoundingClientRect();
+  var sx = (clientX - rect.left) * (CANVAS.width / rect.width);
+  var sy = (clientY - rect.top) * (CANVAS.height / rect.height);
+  for (var i = 0; i < screenButtons.length; i++) {
+    var b = screenButtons[i];
+    if (sx >= b.x && sx <= b.x + b.w && sy >= b.y && sy <= b.y + b.h) {
+      b.action();
+      return true;
+    }
+  }
+  return false;
+}
+
+// ── Tela de título ───────────────────────────────────────────
+function drawTitleScreen() {
+  screenButtons = [];
+  var img = IMAGES['screen_title'];
+  if (img && img.complete) {
+    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    CTX.fillStyle = '#2a7d3a';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+
+  // botão JOGAR
+  var bw = CANVAS.width * 0.30;
+  var bh = CANVAS.height * 0.13;
+  var bx = (CANVAS.width - bw) / 2;
+  var by = CANVAS.height * 0.72;
+
+  var pulse = 1 + Math.sin(Date.now() / 380) * 0.04;
+  var pw = bw * pulse, ph = bh * pulse;
+  var px = (CANVAS.width - pw) / 2, py = by - (ph - bh) / 2;
+
+  CTX.fillStyle = 'rgba(232, 98, 43, 0.95)';
+  hudRoundRect(CTX, px, py, pw, ph, ph / 2);
+  CTX.fill();
+  CTX.strokeStyle = '#fff';
+  CTX.lineWidth = Math.max(2, CANVAS.height * 0.006);
+  hudRoundRect(CTX, px, py, pw, ph, ph / 2);
+  CTX.stroke();
+
+  CTX.fillStyle = '#fff';
+  CTX.textAlign = 'center';
+  CTX.textBaseline = 'middle';
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
+  CTX.fillText('JOGAR', CANVAS.width / 2, py + ph / 2);
+  CTX.textAlign = 'left';
+  CTX.textBaseline = 'alphabetic';
+
+  addButton(bx, by, bw, bh, function () { GAME.state = 'select'; });
+}
+
+// ── Tela de seleção de personagem ────────────────────────────
+function drawSelectScreen() {
+  screenButtons = [];
+
+  var bg = IMAGES['screen_character_select'];
+  if (bg && bg.complete) {
+    CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
+    CTX.fillStyle = 'rgba(0,0,0,0.28)';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    CTX.fillStyle = '#1f5e2c';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+
+  CTX.textAlign = 'center';
+  CTX.fillStyle = '#fff';
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
+  CTX.fillText('Escolha seu guardião', CANVAS.width / 2, CANVAS.height * 0.15);
+
+  var n = CHAR_ORDER.length;
+  var cardW = CANVAS.width * 0.24;
+  var cardH = CANVAS.height * 0.56;
+  var gap = CANVAS.width * 0.04;
+  var totalW = n * cardW + (n - 1) * gap;
+  var startX = (CANVAS.width - totalW) / 2;
+  var cardY = CANVAS.height * 0.22;
+
+  for (var i = 0; i < n; i++) {
+    var nome = CHAR_ORDER[i];
+    var pf = CHARACTER_PROFILES[nome];
+    var cx = startX + i * (cardW + gap);
+    var destaque = (i === selectHover);
+
+    // cartão
+    CTX.fillStyle = destaque ? 'rgba(255, 236, 179, 0.96)' : 'rgba(12, 45, 22, 0.72)';
+    hudRoundRect(CTX, cx, cardY, cardW, cardH, CANVAS.height * 0.03);
+    CTX.fill();
+    if (destaque) {
+      CTX.strokeStyle = '#ffd75e';
+      CTX.lineWidth = Math.max(3, CANVAS.height * 0.008);
+      hudRoundRect(CTX, cx, cardY, cardW, cardH, CANVAS.height * 0.03);
+      CTX.stroke();
+    }
+
+    // sprite idle do personagem
+    var sprite = IMAGES[nome + '_idle_01'];
+    if (sprite && sprite.complete) {
+      var sh = cardH * 0.52;
+      var sscale = sh / sprite.height;
+      var sw = sprite.width * sscale;
+      CTX.drawImage(sprite, cx + (cardW - sw) / 2, cardY + cardH * 0.08, sw, sh);
+    }
+
+    // nome + traço + fruta
+    CTX.fillStyle = destaque ? '#2a1a08' : '#fff';
+    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.045) + 'px sans-serif';
+    CTX.fillText(pf.label, cx + cardW / 2, cardY + cardH * 0.70);
+
+    CTX.font = Math.round(CANVAS.height * 0.032) + 'px sans-serif';
+    CTX.fillStyle = destaque ? '#5c3b1a' : '#ffd75e';
+    CTX.fillText(pf.traco, cx + cardW / 2, cardY + cardH * 0.80);
+    CTX.fillStyle = destaque ? '#2a1a08' : '#cfe8c0';
+    CTX.fillText('Fruta: ' + pf.fruta, cx + cardW / 2, cardY + cardH * 0.90);
+
+    (function (idx, nomeSel) {
+      addButton(cx, cardY, cardW, cardH, function () {
+        if (selectHover === idx) {
+          applyCharacterProfile(nomeSel);
+          startZone(1); // começa o jogo com o personagem escolhido
+        } else {
+          selectHover = idx; // primeiro toque destaca, segundo confirma
+        }
+      });
+    })(i, nome);
+  }
+
+  CTX.font = Math.round(CANVAS.height * 0.034) + 'px sans-serif';
+  CTX.fillStyle = '#fff';
+  CTX.fillText('Toque uma vez para ver, de novo para começar',
+    CANVAS.width / 2, CANVAS.height * 0.92);
+  CTX.textAlign = 'left';
+}
+
+// ── Telas de transição (assumem as do game.js) ───────────────
+function drawZoneCompleteScreen() {
+  screenButtons = [];
+  var img = IMAGES['screen_zone_complete'];
+  if (img && img.complete) {
+    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+  drawTransitionText('Zona ' + GAME.zone + ' completa!', 'Toque para continuar');
+  addButton(0, 0, CANVAS.width, CANVAS.height, function () { advanceFromScreen(); });
+}
+
+function drawWinScreen() {
+  screenButtons = [];
+  var img = IMAGES['screen_win'];
+  if (img && img.complete) {
+    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+  drawTransitionText('Mahahual está salva!', 'Toque para jogar de novo');
+  addButton(0, 0, CANVAS.width, CANVAS.height, function () { GAME.state = 'title'; });
+}
+
+function drawTransitionText(titulo, rodape) {
+  CTX.fillStyle = 'rgba(0,0,0,0.45)';
+  CTX.fillRect(0, CANVAS.height * 0.36, CANVAS.width, CANVAS.height * 0.30);
+  CTX.textAlign = 'center';
+  CTX.fillStyle = '#fff';
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.085) + 'px sans-serif';
+  CTX.fillText(titulo, CANVAS.width / 2, CANVAS.height * 0.47);
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
+  CTX.fillText('Pontos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
+  CTX.font = Math.round(CANVAS.height * 0.038) + 'px sans-serif';
+  CTX.fillText(rodape, CANVAS.width / 2, CANVAS.height * 0.61);
+  CTX.textAlign = 'left';
+}
+
+// ── Roteador de telas (chamado pelo game.js) ─────────────────
+function drawScreen() {
+  switch (GAME.state) {
+    case 'title':         drawTitleScreen();        return true;
+    case 'select':        drawSelectScreen();       return true;
+    case 'zone_complete': drawZoneCompleteScreen(); return true;
+    case 'win':           drawWinScreen();          return true;
+  }
+  return false;
+}
+
+// ── Toque nas telas ──────────────────────────────────────────
+CANVAS.addEventListener('pointerdown', function (e) {
+  if (GAME.state === 'playing') return;
+  handleScreenTap(e.clientX, e.clientY);
+});
