@@ -14,8 +14,8 @@
 var ENEMY_TYPES = {
   bulldozer: {
     targetHeight: 130,
-    speedPct: 5.0 / 1920,   // = velocidade REAL na tela (~1/3 da corrida da Kiara)
-    speed: 5.0,             // valor inicial; recalculado no primeiro resize
+    speedPct: 2.2 / 1920,   // = velocidade REAL na tela (compensada pela câmera)
+    speed: 2.2,             // valor inicial; recalculado no primeiro resize
     fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
@@ -23,8 +23,8 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speedPct: 8.0 / 1920,   // caminhão bem mais rápido (é obstáculo que atravessa)
-    speed: 8.0,
+    speedPct: 4.0 / 1920,   // caminhão mais rápido (é obstáculo que atravessa)
+    speed: 4.0,
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -32,8 +32,8 @@ var ENEMY_TYPES = {
   },
   drone: {
     targetHeight: 75,
-    speedPct: 5.0 / 1920,
-    speed: 5.0,
+    speedPct: 2.2 / 1920,
+    speed: 2.2,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
     hitboxScale: 0.6,   // colisão menor que o desenho — dá espaço pra ela chegar perto e atirar
@@ -42,8 +42,8 @@ var ENEMY_TYPES = {
   },
   robot: {
     targetHeight: 120,
-    speedPct: 4.0 / 1920,   // mais lento — robô pesado
-    speed: 4.0,
+    speedPct: 1.6 / 1920,   // mais lento — robô pesado
+    speed: 1.6,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
@@ -56,10 +56,21 @@ Object.keys(ENEMY_TYPES).forEach(function (type) {
   SPRITE_TARGET_HEIGHT[type] = ENEMY_TYPES[type].targetHeight;
 });
 
-// Altura do drone acima do chão, em % da altura da tela.
-// Precisa ficar DENTRO do alcance do pulo duplo (~0.23 da tela),
-// senão a Kiara nunca consegue acertar a fruta nele.
-var DRONE_HOVER_PCT = 0.17;
+// Altura de voo do drone, calculada a partir da FÍSICA DO PULO SIMPLES.
+// O objetivo: no ápice do 1º pulo, o peito da Kiara (de onde sai a fruta)
+// fica exatamente na altura do meio do drone — então ela pula, atira e
+// acerta. Como é calculado, continua correto se mudarmos gravidade,
+// força do pulo ou tamanho dos sprites depois.
+function droneHoverOffset() {
+  if (typeof JUMP_FORCE_1 === 'undefined' || typeof GRAVITY === 'undefined') {
+    return Math.round(CANVAS.height * 0.30); // fallback antes do player.js carregar
+  }
+  var jumpH  = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY); // ápice do pulo simples
+  var charH  = SPRITE_TARGET_HEIGHT.character;
+  var droneH = ENEMY_TYPES.drone.targetHeight;
+  var chestOffset = charH * 0.55;  // mesma altura usada em throwFruit()
+  return Math.round(jumpH + chestOffset - droneH / 2);
+}
 
 var ENEMIES = []; // todos os inimigos ativos no mundo
 
@@ -73,7 +84,7 @@ function spawnEnemy(type, x, groundY) {
     spawnX: x,               // centro da patrulha
     patrolRange: 90,         // anda até 90px pra cada lado e volta
     y: cfg.flies ? groundY - 150 : groundY, // drone voa mais alto
-    baseY: cfg.flies ? groundY - 150 : groundY,
+    baseY: cfg.flies ? groundY - droneHoverOffset() : groundY,
     dir: 1, // olhando pra direita por padrão (ajustável por inimigo quando o game.js existir)
     state: firstState,
     frame: 0,
@@ -134,7 +145,7 @@ function updateEnemies() {
         if (dist < 30) {
           // chegou no alvo — sobe de volta e volta a patrulhar
           e.droneMode = 'patrol';
-          e.baseY = GROUND_Y - Math.round(CANVAS.height * DRONE_HOVER_PCT); // sobe, mas dentro do alcance do pulo
+          e.baseY = GROUND_Y - droneHoverOffset(); // exatamente na altura do pulo simples
         } else {
           e.x += (dxSwoop / dist) * cfg.speed * 3 + CAM.dx;
           e.y += (dySwoop / dist) * cfg.speed * 3;
@@ -280,7 +291,7 @@ function checkPlayerCollision(e, cfg) {
     if (e.type === 'drone') {
       e.droneMode = 'patrol';
       e.x = P.x + (e.dir >= 0 ? 1100 : -1100);
-      e.baseY = GROUND_Y - Math.round(CANVAS.height * DRONE_HOVER_PCT);
+      e.baseY = GROUND_Y - droneHoverOffset();
       e.y = e.baseY;
       e.leaving = false; // drone pode voltar pra dar nova passagem
       e.actionTimer = 300; // espera antes do próximo swoop
