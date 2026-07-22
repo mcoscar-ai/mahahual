@@ -20,20 +20,25 @@ var CANVAS = document.getElementById('gameCanvas');
 var CTX = CANVAS.getContext('2d');
 
 // ── Câmera ───────────────────────────────────────────────────
-// Estilo Mario Bros clássico (NES): a câmera SÓ avança. Se o personagem
-// andar pra trás, a câmera fica parada — ele esbarra numa "parede
-// invisível" na borda esquerda da tela (ver clamp em player.js).
-var CAM = { x: 0 };
+// CAM.dx = quanto a câmera andou NESTE frame. Os inimigos somam esse
+// valor ao próprio movimento (enemies.js), o que os faz andar em
+// "espaço de tela": a velocidade que aparece pro jogador é sempre
+// cfg.speed, independente da Kiara estar parada, andando ou voltando.
+// Técnica emprestada dos shoot-'em-ups (inimigos em screen space).
+// IMPORTANTE: updateCamera() precisa rodar DEPOIS de updatePlayer()
+// no loop principal, senão CAM.dx fica defasado 1 frame e a
+// compensação não fecha.
+var CAM = { x: 0, dx: 0 };
 
 function updateCamera() {
   var screenW = CANVAS.width;
-  var targetX = P.x - screenW * 0.38; // levemente à esquerda do centro
+  var prevX = CAM.x;
+  // Kiara fica a 38% da tela — dá mais espaço à frente pra ver inimigos chegando
+  var targetX = P.x - screenW * 0.38;
   targetX = Math.max(0, targetX);
   targetX = Math.min(WORLD_WIDTH - screenW, targetX);
-  if (targetX > CAM.x) {
-    CAM.x += (targetX - CAM.x) * 0.2; // só se aproxima do alvo quando ele está à frente
-  }
-  // se targetX <= CAM.x (personagem parou ou andou pra trás), a câmera NÃO se move
+  CAM.x += (targetX - CAM.x) * 0.2;
+  CAM.dx = CAM.x - prevX;
 }
 
 // ── Parallax de background ────────────────────────────────────
@@ -97,10 +102,10 @@ function updateSpriteTargetHeights() {
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15 * (2/3));
-    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14 * (2/3));
-    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10 * (2/3));
-    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15 * (2/3));
+    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15 * (4/3));
+    ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14 * (4/3));
+    ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.10 * (4/3));
+    ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15 * (4/3));
 
     // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
     // proporcional em qualquer tela (celular sem fullscreen, tablet, etc.)
