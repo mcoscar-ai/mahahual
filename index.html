@@ -97,6 +97,7 @@
   <script src="js/renderer.js"></script>
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
+  <script src="js/game.js"></script>
 
   <script>
     // ── Botão de tela cheia ──────────────────────────────────
@@ -155,28 +156,9 @@
     // ── Inicializa jogo após assets carregarem ───────────────
     P.y = GROUND_Y;
 
+    // Loop, zonas e progressão agora vivem em game.js
     checkAssetsLoaded(function () {
-      spawnEnemy('bulldozer', 1200, GROUND_Y);
-      spawnEnemy('caminhao',  2500, GROUND_Y);  // bem depois do bulldozer
-      spawnEnemy('drone',     4500, GROUND_Y);
-      spawnEnemy('robot',     6200, GROUND_Y);
-
-      // Drone começa numa altura que dá pra pular e acertar
-      ENEMIES.forEach(function(e) {
-        if (e.type === 'drone') {
-          e.baseY = GROUND_Y - droneHoverOffset();
-          e.y = e.baseY;
-        }
-      });
-
-      function loop() {
-        updatePlayer();   // 1º: move a Kiara
-        updateCamera();   // 2º: câmera reage e calcula CAM.dx deste frame
-        updateEnemies();  // 3º: inimigos compensam com CAM.dx já correto
-        render(1);
-        requestAnimationFrame(loop);
-      }
-      requestAnimationFrame(loop);
+      startGame();
     });
   </script>
 </body>
