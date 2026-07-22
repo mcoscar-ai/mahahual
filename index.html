@@ -164,7 +164,7 @@
       // Drone começa numa altura que dá pra pular e acertar
       ENEMIES.forEach(function(e) {
         if (e.type === 'drone') {
-          e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35);
+          e.baseY = GROUND_Y - Math.round(CANVAS.height * DRONE_HOVER_PCT);
           e.y = e.baseY;
         }
       });
