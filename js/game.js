@@ -157,6 +157,10 @@ function startZone(n) {
   var cfg = ZONES[n];
   if (!cfg) return;
 
+  // Tamanhos e física com a escala correta ANTES de posicionar qualquer coisa
+  if (typeof updateSpriteTargetHeights === 'function') updateSpriteTargetHeights();
+  if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
+
   WORLD_WIDTH = Math.round(cfg.lengthScreens * CANVAS.width);
 
   ENEMIES.length = 0;
@@ -327,6 +331,14 @@ function gameLoop() {
 
 // ── Boot ─────────────────────────────────────────────────────
 function startGame() {
+  // O renderer.js roda resizeCanvas() ao carregar, mas nessa hora o
+  // enemies.js ainda não existe — então o bloco que recalcula os
+  // tamanhos dos inimigos é pulado e eles ficam com os valores
+  // literais do ENEMY_TYPES até o primeiro resize. Rodando de novo
+  // aqui, com todos os módulos já carregados, tudo fica proporcional
+  // à tela desde o primeiro frame.
+  if (typeof resizeCanvas === 'function') resizeCanvas();
+
   P.y = GROUND_Y;
   LAST_WORLD_CANVAS_W = CANVAS.width;
   startZone(1);
