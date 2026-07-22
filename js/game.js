@@ -25,59 +25,111 @@ var GAME = {
 var ZONES = {
   1: {
     name: 'A Praia Esquecida',
-    lengthScreens: 18,
+    lengthScreens: 55,
     boss: 'boss_bulldozer',
     enemies: [
       { type: 'bulldozer', at: 1.6 },
-      { type: 'caminhao',  at: 3.2 },
-      { type: 'drone',     at: 4.6 },
-      { type: 'bulldozer', at: 6.2 },
-      { type: 'robot',     at: 7.6 },
-      { type: 'drone',     at: 9.0 },
-      { type: 'caminhao',  at: 10.4 },
-      { type: 'bulldozer', at: 11.8 },
-      { type: 'drone',     at: 13.2 },
-      { type: 'robot',     at: 14.6 },
-      { type: 'bulldozer', at: 16.0 }
+      { type: 'caminhao', at: 3.2 },
+      { type: 'drone', at: 5.0 },
+      { type: 'robot', at: 6.8 },
+      { type: 'bulldozer', at: 8.8 },
+      { type: 'drone', at: 10.7 },
+      { type: 'bulldozer', at: 12.7 },
+      { type: 'robot', at: 14.4 },
+      { type: 'caminhao', at: 16.2 },
+      { type: 'drone', at: 17.9 },
+      { type: 'bulldozer', at: 19.9 },
+      { type: 'caminhao', at: 21.9 },
+      { type: 'drone', at: 23.5 },
+      { type: 'robot', at: 25.2 },
+      { type: 'bulldozer', at: 26.8 },
+      { type: 'drone', at: 28.5 },
+      { type: 'bulldozer', at: 30.3 },
+      { type: 'robot', at: 32.2 },
+      { type: 'caminhao', at: 33.8 },
+      { type: 'drone', at: 35.4 },
+      { type: 'bulldozer', at: 37.1 },
+      { type: 'caminhao', at: 38.9 },
+      { type: 'drone', at: 40.7 },
+      { type: 'robot', at: 42.7 },
+      { type: 'bulldozer', at: 44.6 },
+      { type: 'drone', at: 46.4 },
+      { type: 'bulldozer', at: 48.3 },
+      { type: 'robot', at: 50.2 },
+      { type: 'caminhao', at: 51.8 }
     ]
   },
   2: {
     name: 'A Selva Ferida',
-    lengthScreens: 18,
+    lengthScreens: 55,
     boss: 'bossdrone',
     enemies: [
-      { type: 'drone',     at: 1.5 },
-      { type: 'robot',     at: 2.9 },
-      { type: 'drone',     at: 4.2 },
-      { type: 'caminhao',  at: 5.5 },
-      { type: 'drone',     at: 6.8 },
-      { type: 'bulldozer', at: 8.1 },
-      { type: 'drone',     at: 9.4 },
-      { type: 'robot',     at: 10.7 },
-      { type: 'drone',     at: 12.0 },
-      { type: 'caminhao',  at: 13.3 },
-      { type: 'drone',     at: 14.6 },
-      { type: 'bulldozer', at: 15.9 }
+      { type: 'drone', at: 1.6 },
+      { type: 'robot', at: 3.5 },
+      { type: 'drone', at: 5.5 },
+      { type: 'caminhao', at: 7.5 },
+      { type: 'drone', at: 9.2 },
+      { type: 'bulldozer', at: 11.0 },
+      { type: 'drone', at: 12.6 },
+      { type: 'robot', at: 14.4 },
+      { type: 'drone', at: 16.0 },
+      { type: 'bulldozer', at: 17.6 },
+      { type: 'drone', at: 19.3 },
+      { type: 'robot', at: 20.9 },
+      { type: 'drone', at: 22.6 },
+      { type: 'caminhao', at: 24.2 },
+      { type: 'drone', at: 25.7 },
+      { type: 'bulldozer', at: 27.4 },
+      { type: 'drone', at: 29.0 },
+      { type: 'robot', at: 30.7 },
+      { type: 'drone', at: 32.3 },
+      { type: 'bulldozer', at: 34.2 },
+      { type: 'drone', at: 36.1 },
+      { type: 'robot', at: 37.7 },
+      { type: 'drone', at: 39.4 },
+      { type: 'caminhao', at: 41.1 },
+      { type: 'drone', at: 42.9 },
+      { type: 'bulldozer', at: 44.5 },
+      { type: 'drone', at: 46.4 },
+      { type: 'robot', at: 48.5 },
+      { type: 'drone', at: 50.3 },
+      { type: 'bulldozer', at: 52.1 }
     ]
   },
   3: {
     name: 'O Coração de Mahahual',
-    lengthScreens: 18,
+    lengthScreens: 55,
     boss: 'bossrobot',
     enemies: [
-      { type: 'robot',     at: 1.4 },
-      { type: 'drone',     at: 2.6 },
-      { type: 'bulldozer', at: 3.8 },
-      { type: 'robot',     at: 5.0 },
-      { type: 'caminhao',  at: 6.2 },
-      { type: 'drone',     at: 7.4 },
-      { type: 'robot',     at: 8.6 },
-      { type: 'bulldozer', at: 9.8 },
-      { type: 'drone',     at: 11.0 },
-      { type: 'robot',     at: 12.2 },
-      { type: 'caminhao',  at: 13.4 },
-      { type: 'drone',     at: 14.6 },
-      { type: 'robot',     at: 15.8 }
+      { type: 'robot', at: 1.6 },
+      { type: 'drone', at: 3.2 },
+      { type: 'bulldozer', at: 4.9 },
+      { type: 'robot', at: 6.6 },
+      { type: 'caminhao', at: 8.6 },
+      { type: 'robot', at: 10.2 },
+      { type: 'drone', at: 11.8 },
+      { type: 'robot', at: 13.8 },
+      { type: 'bulldozer', at: 15.6 },
+      { type: 'drone', at: 17.2 },
+      { type: 'robot', at: 19.0 },
+      { type: 'drone', at: 20.6 },
+      { type: 'bulldozer', at: 22.4 },
+      { type: 'robot', at: 24.5 },
+      { type: 'caminhao', at: 26.4 },
+      { type: 'robot', at: 28.3 },
+      { type: 'drone', at: 30.0 },
+      { type: 'robot', at: 31.8 },
+      { type: 'bulldozer', at: 33.4 },
+      { type: 'drone', at: 35.3 },
+      { type: 'robot', at: 37.1 },
+      { type: 'drone', at: 39.1 },
+      { type: 'bulldozer', at: 40.8 },
+      { type: 'robot', at: 42.5 },
+      { type: 'caminhao', at: 44.4 },
+      { type: 'robot', at: 46.5 },
+      { type: 'drone', at: 48.4 },
+      { type: 'robot', at: 50.4 },
+      { type: 'bulldozer', at: 52.3 }
     ]
   }
 };
@@ -100,6 +152,7 @@ function startZone(n) {
 
   ENEMIES.length = 0;
   FRUITS.length = 0;
+  if (typeof BARRIS !== 'undefined') BARRIS.length = 0;
 
   for (var i = 0; i < cfg.enemies.length; i++) {
     var spec = cfg.enemies[i];
@@ -247,6 +300,7 @@ function gameLoop() {
     updatePlayer();   // 1º: move a Kiara
     updateCamera();   // 2º: câmera acompanha
     updateEnemies();  // 3º: inimigos (espaço de mundo, como todo platformer)
+    if (typeof updateBarris === 'function') updateBarris();
     if (typeof updateItems === 'function') updateItems();
     checkZoneEnd();
   } else {
