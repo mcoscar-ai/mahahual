@@ -14,8 +14,8 @@
 var ENEMY_TYPES = {
   bulldozer: {
     targetHeight: 130,
-    speedPct: 1.5 / 1920,   // lento — criança tem tempo de reagir
-    speed: 1.5,             // valor inicial; recalculado no primeiro resize
+    speedPct: 0.8 / 1920,   // bem lento — criança tem tempo de reagir
+    speed: 0.8,             // valor inicial; recalculado no primeiro resize
     fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
@@ -23,8 +23,8 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speedPct: 3 / 1920,     // caminhão um pouco mais rápido (é obstáculo que atravessa)
-    speed: 3,
+    speedPct: 1.6 / 1920,   // caminhão um pouco mais rápido (é obstáculo que atravessa)
+    speed: 1.6,
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -32,17 +32,18 @@ var ENEMY_TYPES = {
   },
   drone: {
     targetHeight: 75,
-    speedPct: 1.5 / 1920,
-    speed: 1.5,
+    speedPct: 0.8 / 1920,
+    speed: 0.8,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
+    hitboxScale: 0.6,   // colisão menor que o desenho — dá espaço pra ela chegar perto e atirar
     flies: true,
     drawDirFlip: -1
   },
   robot: {
     targetHeight: 120,
-    speedPct: 1 / 1920,     // mais lento — robô pesado
-    speed: 1,
+    speedPct: 0.55 / 1920,  // mais lento — robô pesado
+    speed: 0.55,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
@@ -54,6 +55,11 @@ var ENEMY_TYPES = {
 Object.keys(ENEMY_TYPES).forEach(function (type) {
   SPRITE_TARGET_HEIGHT[type] = ENEMY_TYPES[type].targetHeight;
 });
+
+// Altura do drone acima do chão, em % da altura da tela.
+// Precisa ficar DENTRO do alcance do pulo duplo (~0.23 da tela),
+// senão a Kiara nunca consegue acertar a fruta nele.
+var DRONE_HOVER_PCT = 0.17;
 
 var ENEMIES = []; // todos os inimigos ativos no mundo
 
@@ -110,7 +116,7 @@ function updateEnemies() {
         e.y = e.baseY + Math.sin(e.hoverPhase) * 12;
         var distToPlayer = P.x - e.x;
         e.dir = distToPlayer >= 0 ? 1 : -1;
-        if (Math.abs(distToPlayer) > 80) {
+        if (Math.abs(distToPlayer) > 260) {
           e.x += cfg.speed * e.dir + CAM.dx;
         }
         // A cada ~5s mergulha em direção à Kiara (swoop rápido)
@@ -128,7 +134,7 @@ function updateEnemies() {
         if (dist < 30) {
           // chegou no alvo — sobe de volta e volta a patrulhar
           e.droneMode = 'patrol';
-          e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35); // sobe bem
+          e.baseY = GROUND_Y - Math.round(CANVAS.height * DRONE_HOVER_PCT); // sobe, mas dentro do alcance do pulo
         } else {
           e.x += (dxSwoop / dist) * cfg.speed * 3 + CAM.dx;
           e.y += (dySwoop / dist) * cfg.speed * 3;
@@ -251,8 +257,14 @@ function checkPlayerCollision(e, cfg) {
   if (e.defeated) return;
   var dims = getSpriteDims(e.type, e.state, cfg.targetHeight);
   if (!dims) return;
-  var eLeft = e.x - dims.width / 2, eRight = e.x + dims.width / 2;
-  var eTop = e.y - dims.height, eBottom = e.y;
+  // hitboxScale encolhe a caixa de colisão sem mudar o desenho — o drone
+  // usa isso pra ela poder chegar perto e atirar sem encostar nele.
+  var hs = cfg.hitboxScale || 1;
+  var hw = (dims.width  * hs) / 2;
+  var hh =  dims.height * hs;
+  var cy = e.y - dims.height / 2; // centro vertical do sprite
+  var eLeft = e.x - hw, eRight = e.x + hw;
+  var eTop = cy - hh / 2, eBottom = cy + hh / 2;
 
   var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.25;
   var pRight = P.x + SPRITE_TARGET_HEIGHT.character * 0.25;
@@ -267,8 +279,8 @@ function checkPlayerCollision(e, cfg) {
     // volta pro modo patrol numa posição longe
     if (e.type === 'drone') {
       e.droneMode = 'patrol';
-      e.x = P.x + (e.dir >= 0 ? 700 : -700);
-      e.baseY = GROUND_Y - Math.round(CANVAS.height * 0.35);
+      e.x = P.x + (e.dir >= 0 ? 1100 : -1100);
+      e.baseY = GROUND_Y - Math.round(CANVAS.height * DRONE_HOVER_PCT);
       e.y = e.baseY;
       e.leaving = false; // drone pode voltar pra dar nova passagem
       e.actionTimer = 300; // espera antes do próximo swoop
