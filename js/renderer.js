@@ -240,6 +240,7 @@ function render(zone) {
   drawBackground(zone || 1);
   drawGround(zone || 1);
   if (typeof drawEnemies  === 'function') drawEnemies(CTX, CAM.x);
+  if (typeof drawBarris   === 'function') drawBarris(CTX, CAM.x);
   if (typeof drawFruits   === 'function') drawFruits(CTX, CAM.x);
   if (typeof drawPlayer   === 'function') drawPlayer(CTX, CAM.x);
   if (typeof drawHUD      === 'function') drawHUD(CTX);
