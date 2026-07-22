@@ -14,8 +14,8 @@
 var ENEMY_TYPES = {
   bulldozer: {
     targetHeight: 130,
-    speedPct: 0.8 / 1920,   // bem lento — criança tem tempo de reagir
-    speed: 0.8,             // valor inicial; recalculado no primeiro resize
+    speedPct: 1.5 / 1920,   // lento — criança tem tempo de reagir
+    speed: 1.5,             // valor inicial; recalculado no primeiro resize
     fruitHits: 5,
     states: { move: 4, hit: 2, transform: 5 },
     flies: false,
@@ -23,8 +23,8 @@ var ENEMY_TYPES = {
   },
   caminhao: {
     targetHeight: 100,
-    speedPct: 1.6 / 1920,   // caminhão um pouco mais rápido (é obstáculo que atravessa)
-    speed: 1.6,
+    speedPct: 2.8 / 1920,   // caminhão um pouco mais rápido (é obstáculo que atravessa)
+    speed: 2.8,
     fruitHits: null,
     states: { move: 3 },
     flies: false,
@@ -32,8 +32,8 @@ var ENEMY_TYPES = {
   },
   drone: {
     targetHeight: 75,
-    speedPct: 0.8 / 1920,
-    speed: 0.8,
+    speedPct: 1.5 / 1920,
+    speed: 1.5,
     fruitHits: 3,
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
     hitboxScale: 0.6,   // colisão menor que o desenho — dá espaço pra ela chegar perto e atirar
@@ -42,8 +42,8 @@ var ENEMY_TYPES = {
   },
   robot: {
     targetHeight: 120,
-    speedPct: 0.55 / 1920,  // mais lento — robô pesado
-    speed: 0.55,
+    speedPct: 1.0 / 1920,   // mais lento — robô pesado
+    speed: 1.0,
     fruitHits: 2,
     states: { walk: 6, sign_plant: 5, idle_hit: 5 },
     flies: false,
