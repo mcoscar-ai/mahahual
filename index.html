@@ -98,6 +98,7 @@
   <script src="js/player.js"></script>
   <script src="js/enemies.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/hud.js"></script>
 
   <script>
     // ── Botão de tela cheia ──────────────────────────────────
@@ -156,9 +157,37 @@
     // ── Inicializa jogo após assets carregarem ───────────────
     P.y = GROUND_Y;
 
+    // Mostra o erro na tela em vez de deixar tudo preto
+    function telaDeErro(msg, detalhe) {
+      CTX.fillStyle = '#1a0d0d';
+      CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+      CTX.textAlign = 'center';
+      CTX.fillStyle = '#ff8a80';
+      CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
+      CTX.fillText(msg, CANVAS.width / 2, CANVAS.height * 0.45);
+      if (detalhe) {
+        CTX.fillStyle = '#ffd9d4';
+        CTX.font = Math.round(CANVAS.height * 0.032) + 'px sans-serif';
+        CTX.fillText(String(detalhe).slice(0, 90), CANVAS.width / 2, CANVAS.height * 0.55);
+      }
+      CTX.textAlign = 'left';
+    }
+
+    window.addEventListener('error', function (ev) {
+      telaDeErro('Erro de script', (ev.filename || '') + ' : ' + ev.message);
+    });
+
     // Loop, zonas e progressão agora vivem em game.js
     checkAssetsLoaded(function () {
-      startGame();
+      if (typeof startGame !== 'function') {
+        telaDeErro('js/game.js não carregou', 'Confira se o arquivo existe no repositório');
+        return;
+      }
+      try {
+        startGame();
+      } catch (err) {
+        telaDeErro('Erro ao iniciar', err && err.message);
+      }
     });
   </script>
 </body>
