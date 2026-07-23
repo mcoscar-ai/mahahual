@@ -14,6 +14,13 @@
 // ═══════════════════════════════════════════════════════════════
 
 var AUDIO_LIGADO = true;
+
+// Efeitos sonoros DESLIGADOS. Hoje só existem sfx_jump e sfx_hit, e eles
+// acabavam repetindo o tempo todo (o mesmo som servia pra pulo, arremesso,
+// coleta e estrela), o que ficava cansativo por cima da música.
+// Quando os arquivos definitivos de cada efeito existirem, é só trocar
+// esta linha para true — o resto do módulo já está pronto.
+var SFX_LIGADO = false;
 var AUDIO_DESTRAVADO = false;
 var MUSICA_ATUAL = null;      // chave da música tocando
 var MUSICA_OBJ = null;        // elemento Audio em reprodução
@@ -71,6 +78,7 @@ window.addEventListener('touchstart', destravarAudio, { once: false });
 
 // ── Efeitos sonoros ──────────────────────────────────────────
 function playSFX(chave) {
+  if (!SFX_LIGADO) return;
   if (!AUDIO_LIGADO || !AUDIO_DESTRAVADO) return;
 
   var real = (AUDIO[chave]) ? chave : SFX_SUBSTITUTO[chave];
