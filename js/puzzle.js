@@ -33,6 +33,28 @@ var PUZZLES_POR_ZONA = {
        titulo: '¡Arma el tucán!' }
 };
 
+// ── Modos avulsos (fora da história) ─────────────────────────
+// Memorama escala fácil: são 12 animais, dá pra fazer vários níveis.
+// Encaixe depende de arte recortada, então só os 3 que existem.
+var NIVEIS_MEMORIA = [
+  { pares: 4,  rotulo: '4 parejas',  titulo: '¡Encuentra las parejas!' },
+  { pares: 6,  rotulo: '6 parejas',  titulo: '¡Encuentra las parejas!' },
+  { pares: 8,  rotulo: '8 parejas',  titulo: '¡Encuentra las parejas!' },
+  { pares: 10, rotulo: '10 parejas', titulo: '¡Encuentra las parejas!' },
+  { pares: 12, rotulo: '12 parejas', titulo: '¡Todas las parejas!' }
+];
+
+var NIVEIS_PUZZLE = [
+  { forma: 'cantos', animal: 'capivara', pecas: ['TL','TR','BL','BR'],
+    rotulo: 'Capibara', dificuldade: '4 piezas', titulo: '¡Arma el capibara!' },
+  { forma: 'grade',  animal: 'jaguar',
+    pecas: ['01','02','03','04','05','06','07','08'], cols: 4, linhas: 2,
+    rotulo: 'Jaguar', dificuldade: '8 piezas', titulo: '¡Arma el jaguar!' },
+  { forma: 'grade',  animal: 'tucano',
+    pecas: ['01','02','03','04','05','06','07','08'], cols: 4, linhas: 2,
+    rotulo: 'Tucán', dificuldade: '8 piezas', titulo: '¡Arma el tucán!' }
+];
+
 var MEMORAMA_POOL = [
   'capivara', 'jaguar', 'tucano', 'perezoso', 'tatu', 'titi',
   'caiman', 'guacamayo_azul', 'mono_capuchino', 'oso_hormiguero',
@@ -42,12 +64,26 @@ var MEMORAMA_POOL = [
 // ── Início ───────────────────────────────────────────────────
 function iniciarPuzzle(zona) {
   var cfg = PUZZLES_POR_ZONA[zona];
+  return montarMinijogo(cfg, 'zona');
+}
+
+// Abre um minijogo avulso (modos Memoria / Puzzles do menu).
+// retorno: pra onde voltar quando terminar.
+function abrirMinijogoAvulso(cfg, retorno, indice) {
+  if (!montarMinijogo(cfg, retorno)) return false;
+  PUZZLE.indice = indice;
+  GAME.state = 'puzzle';
+  return true;
+}
+
+function montarMinijogo(cfg, retorno) {
   if (!cfg) { PUZZLE = null; return false; }
 
-  if (cfg.tipo === 'encaixe') iniciarEncaixe(cfg);
-  else                        iniciarMemorama(cfg);
+  if (cfg.tipo === 'memorama' || cfg.pares) iniciarMemorama(cfg);
+  else                                      iniciarEncaixe(cfg);
 
   PUZZLE.zona = cfg;
+  PUZZLE.retorno = retorno || 'zona';
   PUZZLE.completo = false;
   PUZZLE.fimTimer = 0;
   return true;
@@ -210,8 +246,11 @@ function iniciarMemorama(cfg) {
     var t2 = cartas[k]; cartas[k] = cartas[j2]; cartas[j2] = t2;
   }
 
-  var cols = 4;
-  var linhas = Math.ceil(cartas.length / cols);
+  // Grade adaptativa: mais cartas, mais linhas — senão em 12 pares
+  // elas ficariam finas demais numa tela deitada.
+  var n = cartas.length;
+  var linhas = (n <= 8) ? 2 : (n <= 12 ? 3 : 4);
+  var cols = Math.ceil(n / linhas);
   var gridH = H * 0.56;
   var ch = gridH / linhas;
   var cw = ch * 0.82;
@@ -260,12 +299,17 @@ function updatePuzzle() {
   if (PUZZLE.completo) {
     PUZZLE.fimTimer++;
     if (PUZZLE.fimTimer > 110) {
-      var proxima = GAME.zone + 1;
+      var destino = PUZZLE.retorno;
+      var idx = PUZZLE.indice;
       PUZZLE = null;
-      if (proxima > GAME.maxZone) {
-        GAME.state = 'win';
+
+      if (destino === 'menu_memoria' || destino === 'menu_puzzle') {
+        if (typeof marcarConcluido === 'function') marcarConcluido(destino, idx);
+        GAME.state = destino;
       } else {
-        startZone(proxima);
+        var proxima = GAME.zone + 1;
+        if (proxima > GAME.maxZone) GAME.state = 'win';
+        else                        startZone(proxima);
       }
     }
     return;
@@ -308,6 +352,15 @@ function puzzleCoord(e) {
 
 function puzzlePointerDown(px, py) {
   if (!PUZZLE || PUZZLE.completo) return;
+
+  if (puzzleTemVoltar()) {
+    var v = PUZZLE_VOLTAR_RECT;
+    if (px >= v.x && px <= v.x + v.w && py >= v.y && py <= v.y + v.h) {
+      GAME.state = PUZZLE.retorno;
+      PUZZLE = null;
+      return;
+    }
+  }
 
   if (PUZZLE.tipo === 'encaixe') {
     // de trás pra frente: pega a peça desenhada por cima
@@ -411,6 +464,8 @@ function drawPuzzle(ctx) {
 
   if (PUZZLE.tipo === 'encaixe') drawEncaixe(ctx);
   else                           drawMemorama(ctx);
+
+  drawPuzzleVoltar(ctx);
 
   if (PUZZLE.completo) {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -535,3 +590,31 @@ CANVAS.addEventListener('pointercancel', function () {
   if (typeof GAME === 'undefined' || GAME.state !== 'puzzle') return;
   puzzlePointerUp();
 });
+
+
+// ── Voltar (só nos modos avulsos) ────────────────────────────
+var PUZZLE_VOLTAR_RECT = { x: 0, y: 0, w: 0, h: 0 };
+
+function puzzleTemVoltar() {
+  return !!(PUZZLE && PUZZLE.retorno && PUZZLE.retorno !== 'zona');
+}
+
+function drawPuzzleVoltar(ctx) {
+  if (!puzzleTemVoltar()) return;
+  var H = CANVAS.height;
+  var pad = Math.round(H * 0.025);
+  var s = Math.round(H * 0.075);
+  PUZZLE_VOLTAR_RECT = { x: pad, y: pad, w: s, h: s };
+
+  ctx.fillStyle = 'rgba(12, 45, 22, 0.72)';
+  hudRoundRect(ctx, pad, pad, s, s, s / 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#ffd75e';
+  ctx.lineWidth = Math.max(3, H * 0.007);
+  ctx.beginPath();
+  ctx.moveTo(pad + s * 0.62, pad + s * 0.28);
+  ctx.lineTo(pad + s * 0.36, pad + s * 0.5);
+  ctx.lineTo(pad + s * 0.62, pad + s * 0.72);
+  ctx.stroke();
+}
