@@ -24,7 +24,7 @@ var GAME = {
 // "at" é a posição em LARGURAS DE TELA a partir do início da zona.
 var ZONES = {
   1: {
-    name: 'A Praia Esquecida',
+    name: 'La Playa Olvidada',
     lengthScreens: 55,
     boss: 'boss_bulldozer',
     enemies: [
@@ -63,7 +63,7 @@ var ZONES = {
     ]
   },
   2: {
-    name: 'A Selva Ferida',
+    name: 'La Selva Herida',
     lengthScreens: 55,
     boss: 'bossdrone',
     enemies: [
@@ -93,7 +93,7 @@ var ZONES = {
     ]
   },
   3: {
-    name: 'O Coração de Mahahual',
+    name: 'El Corazón de Mahahual',
     lengthScreens: 55,
     boss: 'bossrobot',
     enemies: [
@@ -270,10 +270,10 @@ function drawTransitionScreen() {
   var titulo = '';
   if (GAME.state === 'zone_complete') {
     img = IMAGES['screen_zone_complete'];
-    titulo = 'Zona ' + GAME.zone + ' completa!';
+    titulo = '¡Zona ' + GAME.zone + ' completa!';
   } else if (GAME.state === 'win') {
     img = IMAGES['screen_win'];
-    titulo = 'Mahahual está salva!';
+    titulo = '¡Mahahual está a salvo!';
   } else {
     return;
   }
@@ -294,10 +294,10 @@ function drawTransitionScreen() {
   CTX.fillText(titulo, CANVAS.width / 2, CANVAS.height * 0.46);
 
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
-  CTX.fillText('Pontos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
+  CTX.fillText('Puntos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
 
   CTX.font = Math.round(CANVAS.height * 0.038) + 'px sans-serif';
-  CTX.fillText('Toque na tela para continuar', CANVAS.width / 2, CANVAS.height * 0.62);
+  CTX.fillText('Toca la pantalla para continuar', CANVAS.width / 2, CANVAS.height * 0.62);
   CTX.textAlign = 'left';
 }
 
