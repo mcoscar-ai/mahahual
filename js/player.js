@@ -47,8 +47,12 @@ var JUMP_FORCE_2 = JUMP_FORCE_2_BASE;
 var FRUIT_SPEED  = FRUIT_SPEED_BASE;
 
 var MAX_JUMPS    = 2;
-var DIZZY_DURATION  = 120; // 2s a 60fps
-var THROW_COOLDOWN  = 20;
+var DIZZY_DURATION  = 60;  // 1s a 60fps
+// Cadência do arremesso. Com 20 frames eram 3 frutas por segundo —
+// segurando o botão o jogo virava metralhadora e derrubava bulldozer
+// em 1,7s, tornando tudo trivial. Com 38 fica em ~1,6 por segundo:
+// ainda contínuo (como você preferiu), mas cada fruta conta.
+var THROW_COOLDOWN  = 38;
 var FRAME_DELAY     = 6;
 
 function updatePhysicsScale() {
@@ -79,7 +83,10 @@ var P = {
   dizzyTimer: 0,
   invulnerable: false,
   throwTimer: 0,
-  throwHoldFrames: 0
+  throwHoldFrames: 0,
+  starTimer: 0,      // invencibilidade da estrelinha (frames)
+  spin: 0,
+  spinAngle: 0
 };
 
 var FRUITS = [];
@@ -91,6 +98,8 @@ function frameCount(state) {
 // ── Update principal ──────────────────────────────────────────
 function updatePlayer() {
   updatePhysicsScale(); // mantém pulo/velocidade proporcionais ao canvas atual
+
+  if (P.starTimer > 0) P.starTimer--;
 
   // Tonto: sem controle, gravidade continua aplicada
   if (P.dizzyTimer > 0) {
@@ -202,6 +211,7 @@ function updateFruits() {
 }
 
 function playerGetHit() {
+  if (P.starTimer > 0) return; // estrelinha: imune a tudo
   if (P.invulnerable || P.dizzyTimer > 0) return;
   P.dizzyTimer = DIZZY_DURATION;
   P.invulnerable = true;
@@ -209,7 +219,40 @@ function playerGetHit() {
   if (typeof playSFX === 'function') playSFX('sfx_dizzy');
 }
 
+// Aura da estrelinha: halo pulsante em arco-íris + faíscas ao redor.
+// Desenhado por código (não há sprite de estrela no projeto).
+function drawStarAura(ctx, cameraX) {
+  if (P.starTimer <= 0) return;
+  var h = SPRITE_TARGET_HEIGHT.character;
+  var cx = P.x - cameraX;
+  var cy = P.y - h / 2;
+  var t = Date.now() / 90;
+
+  // pisca mais rápido nos últimos 2 segundos, avisando que vai acabar
+  if (P.starTimer < 120 && Math.floor(P.starTimer / 6) % 2 === 0) return;
+
+  var matiz = (t * 8) % 360;
+  ctx.save();
+  ctx.globalAlpha = 0.42 + Math.sin(t) * 0.12;
+  ctx.fillStyle = 'hsl(' + matiz + ', 95%, 62%)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, h * (0.62 + Math.sin(t * 1.3) * 0.05), 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.9;
+  for (var i = 0; i < 6; i++) {
+    var a = t * 0.9 + i * (Math.PI / 3);
+    var r = h * 0.55;
+    ctx.fillStyle = 'hsl(' + ((matiz + i * 55) % 360) + ', 100%, 72%)';
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.8, h * 0.055, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawPlayer(ctx, cameraX) {
+  drawStarAura(ctx, cameraX);
   var n = P.frame + 1;
   var nStr = n < 10 ? '0' + n : '' + n;
   var img = IMAGES[SELECTED_CHAR + '_' + P.state + '_' + nStr];
