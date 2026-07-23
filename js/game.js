@@ -28,40 +28,38 @@ var ZONES = {
     lengthScreens: 55,
     boss: 'boss_bulldozer',
     enemies: [
-      { type: 'bulldozer', at: 1.8 },
-      { type: 'bulldozer', at: 3.9 },
-      { type: 'bulldozer', at: 5.7 },
-      { type: 'drone', at: 7.6 },
-      { type: 'bulldozer', at: 8.2 },
-      { type: 'bulldozer', at: 10.2 },
-      { type: 'drone', at: 10.9 },
-      { type: 'bulldozer', at: 12.8 },
-      { type: 'bulldozer', at: 13.4 },
-      { type: 'bulldozer', at: 14.9 },
-      { type: 'bulldozer', at: 16.4 },
-      { type: 'bulldozer', at: 18.4 },
-      { type: 'bulldozer', at: 20.2 },
-      { type: 'drone', at: 21.9 },
-      { type: 'bulldozer', at: 23.9 },
-      { type: 'bulldozer', at: 25.5 },
-      { type: 'bulldozer', at: 26.2 },
-      { type: 'bulldozer', at: 28.3 },
-      { type: 'bulldozer', at: 30.3 },
-      { type: 'bulldozer', at: 31.0 },
-      { type: 'bulldozer', at: 33.1 },
-      { type: 'drone', at: 33.8 },
-      { type: 'bulldozer', at: 35.4 },
-      { type: 'drone', at: 37.5 },
-      { type: 'bulldozer', at: 38.1 },
-      { type: 'drone', at: 39.6 },
-      { type: 'bulldozer', at: 40.3 },
-      { type: 'drone', at: 41.9 },
-      { type: 'bulldozer', at: 42.6 },
-      { type: 'bulldozer', at: 44.3 },
-      { type: 'drone', at: 46.4 },
-      { type: 'bulldozer', at: 48.5 },
-      { type: 'bulldozer', at: 50.5 },
-      { type: 'bulldozer', at: 51.2 }
+      { type: 'drone', at: 1.8 },
+      { type: 'bulldozer', at: 3.8 },
+      { type: 'bulldozer', at: 5.6 },
+      { type: 'bulldozer', at: 6.2 },
+      { type: 'bulldozer', at: 7.8 },
+      { type: 'bulldozer', at: 8.4 },
+      { type: 'bulldozer', at: 10.1 },
+      { type: 'bulldozer', at: 11.8 },
+      { type: 'bulldozer', at: 13.7 },
+      { type: 'bulldozer', at: 15.8 },
+      { type: 'bulldozer', at: 17.5 },
+      { type: 'bulldozer', at: 19.2 },
+      { type: 'bulldozer', at: 21.1 },
+      { type: 'bulldozer', at: 23.0 },
+      { type: 'drone', at: 23.6 },
+      { type: 'bulldozer', at: 25.2 },
+      { type: 'bulldozer', at: 25.8 },
+      { type: 'drone', at: 27.6 },
+      { type: 'bulldozer', at: 29.4 },
+      { type: 'bulldozer', at: 31.3 },
+      { type: 'drone', at: 32.9 },
+      { type: 'bulldozer', at: 34.9 },
+      { type: 'bulldozer', at: 36.9 },
+      { type: 'drone', at: 38.5 },
+      { type: 'bulldozer', at: 39.2 },
+      { type: 'bulldozer', at: 41.2 },
+      { type: 'drone', at: 43.1 },
+      { type: 'drone', at: 45.2 },
+      { type: 'bulldozer', at: 47.3 },
+      { type: 'bulldozer', at: 47.9 },
+      { type: 'drone', at: 49.5 },
+      { type: 'bulldozer', at: 51.1 }
     ]
   },
   2: {
@@ -70,36 +68,28 @@ var ZONES = {
     boss: 'bossdrone',
     enemies: [
       { type: 'drone', at: 1.8 },
-      { type: 'caminhao', at: 3.5 },
-      { type: 'caminhao', at: 4.1 },
-      { type: 'caminhao', at: 6.0 },
-      { type: 'caminhao', at: 8.1 },
-      { type: 'caminhao', at: 10.1 },
-      { type: 'drone', at: 10.8 },
-      { type: 'caminhao', at: 12.5 },
-      { type: 'caminhao', at: 14.5 },
-      { type: 'drone', at: 16.6 },
-      { type: 'caminhao', at: 18.1 },
-      { type: 'drone', at: 19.8 },
-      { type: 'drone', at: 21.8 },
-      { type: 'drone', at: 23.4 },
-      { type: 'drone', at: 24.0 },
-      { type: 'drone', at: 26.0 },
-      { type: 'caminhao', at: 28.0 },
-      { type: 'caminhao', at: 28.6 },
-      { type: 'caminhao', at: 30.2 },
-      { type: 'caminhao', at: 32.0 },
-      { type: 'drone', at: 34.1 },
-      { type: 'drone', at: 36.0 },
-      { type: 'caminhao', at: 36.5 },
-      { type: 'drone', at: 38.6 },
-      { type: 'drone', at: 40.1 },
-      { type: 'caminhao', at: 42.0 },
-      { type: 'caminhao', at: 43.6 },
-      { type: 'drone', at: 45.6 },
-      { type: 'drone', at: 47.6 },
-      { type: 'drone', at: 49.5 },
-      { type: 'drone', at: 51.2 }
+      { type: 'drone', at: 3.5 },
+      { type: 'drone', at: 5.2 },
+      { type: 'caminhao', at: 8.3 },
+      { type: 'drone', at: 10.7 },
+      { type: 'caminhao', at: 13.7 },
+      { type: 'drone', at: 16.1 },
+      { type: 'drone', at: 17.8 },
+      { type: 'drone', at: 19.6 },
+      { type: 'drone', at: 21.2 },
+      { type: 'caminhao', at: 24.1 },
+      { type: 'drone', at: 26.5 },
+      { type: 'drone', at: 28.1 },
+      { type: 'drone', at: 29.7 },
+      { type: 'drone', at: 31.5 },
+      { type: 'caminhao', at: 34.8 },
+      { type: 'drone', at: 37.2 },
+      { type: 'drone', at: 38.8 },
+      { type: 'drone', at: 40.4 },
+      { type: 'drone', at: 42.3 },
+      { type: 'drone', at: 44.1 },
+      { type: 'caminhao', at: 46.7 },
+      { type: 'caminhao', at: 50.2 }
     ]
   },
   3: {
@@ -108,37 +98,36 @@ var ZONES = {
     boss: 'bossrobot',
     enemies: [
       { type: 'robot', at: 1.8 },
-      { type: 'robot', at: 3.6 },
-      { type: 'drone', at: 4.3 },
-      { type: 'drone', at: 6.4 },
-      { type: 'robot', at: 8.3 },
-      { type: 'robot', at: 10.3 },
-      { type: 'robot', at: 11.8 },
-      { type: 'robot', at: 13.5 },
-      { type: 'drone', at: 15.3 },
-      { type: 'robot', at: 16.8 },
-      { type: 'robot', at: 18.5 },
-      { type: 'robot', at: 20.3 },
-      { type: 'robot', at: 22.0 },
-      { type: 'drone', at: 22.7 },
-      { type: 'drone', at: 24.7 },
-      { type: 'robot', at: 26.6 },
-      { type: 'drone', at: 27.2 },
-      { type: 'robot', at: 29.2 },
-      { type: 'robot', at: 30.9 },
-      { type: 'robot', at: 32.6 },
-      { type: 'robot', at: 34.4 },
-      { type: 'drone', at: 36.4 },
-      { type: 'robot', at: 38.0 },
-      { type: 'robot', at: 39.5 },
-      { type: 'drone', at: 41.2 },
-      { type: 'robot', at: 41.8 },
-      { type: 'drone', at: 43.3 },
-      { type: 'robot', at: 44.9 },
-      { type: 'robot', at: 46.6 },
-      { type: 'drone', at: 48.6 },
-      { type: 'robot', at: 50.3 },
-      { type: 'robot', at: 50.8 }
+      { type: 'robot', at: 3.7 },
+      { type: 'robot', at: 5.4 },
+      { type: 'robot', at: 7.5 },
+      { type: 'drone', at: 9.2 },
+      { type: 'robot', at: 11.1 },
+      { type: 'robot', at: 12.6 },
+      { type: 'robot', at: 14.6 },
+      { type: 'robot', at: 15.3 },
+      { type: 'robot', at: 17.1 },
+      { type: 'drone', at: 18.8 },
+      { type: 'robot', at: 20.8 },
+      { type: 'robot', at: 21.6 },
+      { type: 'robot', at: 23.3 },
+      { type: 'drone', at: 24.8 },
+      { type: 'robot', at: 26.7 },
+      { type: 'robot', at: 27.5 },
+      { type: 'drone', at: 29.1 },
+      { type: 'robot', at: 30.7 },
+      { type: 'drone', at: 32.3 },
+      { type: 'robot', at: 34.2 },
+      { type: 'robot', at: 36.2 },
+      { type: 'robot', at: 37.9 },
+      { type: 'robot', at: 38.6 },
+      { type: 'robot', at: 40.4 },
+      { type: 'drone', at: 42.2 },
+      { type: 'robot', at: 43.9 },
+      { type: 'robot', at: 46.0 },
+      { type: 'drone', at: 48.0 },
+      { type: 'drone', at: 48.7 },
+      { type: 'robot', at: 50.7 }
     ]
   }
 };
@@ -167,6 +156,7 @@ function startZone(n) {
   FRUITS.length = 0;
   if (typeof BARRIS !== 'undefined') BARRIS.length = 0;
   if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
+  P.starTimer = 0;
 
   for (var i = 0; i < cfg.enemies.length; i++) {
     var spec = cfg.enemies[i];
@@ -178,6 +168,9 @@ function startZone(n) {
   if (typeof spawnBoss === 'function' && cfg.boss) {
     spawnBoss(cfg.boss, Math.round((cfg.lengthScreens - 1.2) * CANVAS.width));
   }
+
+  // Placas fixas: obstáculos previsíveis que só se passa pulando.
+  if (typeof spawnPlacasFixas === 'function') spawnPlacasFixas(WORLD_WIDTH);
 
   // Itens coletáveis (lixo) — quando items.js existir.
   if (typeof spawnZoneItems === 'function') {
@@ -317,6 +310,7 @@ function gameLoop() {
     if (typeof updateBarris === 'function') updateBarris();
     if (typeof updatePlacas === 'function') updatePlacas();
     if (typeof updateItems === 'function') updateItems();
+    if (typeof updateStars === 'function') updateStars();
     checkZoneEnd();
   } else {
     pollAdvanceInput();
