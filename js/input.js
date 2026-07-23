@@ -67,11 +67,11 @@ function layoutBtns() {
   // mas isso vale pra interface comum. Controle de jogo de ação, apertado
   // repetidamente e sem olhar, precisa de bem mais — e criança pequena,
   // com coordenação fina em formação, precisa de mais ainda.
-  // Antes estava em 0.14 (~50px num celular), quase no mínimo absoluto.
-  // Agora dá ~86px no mesmo aparelho, com limites pra não ficar minúsculo
-  // em telas pequenas nem exagerado em tablet.
+  // 0.14 (~50px) era pequeno demais; 0.24 (~86px) cobria muita tela.
+  // 0.20 dá ~72px num celular comum — acima do mínimo com folga, sem
+  // roubar espaço da área de jogo.
   var base = Math.min(W, H);
-  var size = Math.min(Math.max(base * 0.24, 64), 120);
+  var size = Math.min(Math.max(base * 0.20, 58), 100);
   var gap  = Math.max(base * 0.045, 14);   // espaço entre botões evita toque errado
   var margin = size * 0.30;
 
