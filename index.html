@@ -84,12 +84,12 @@
   <canvas id="gameCanvas"></canvas>
 
   <!-- Botão de tela cheia — visível até o usuário ativar -->
-  <button id="btnFullscreen" title="Tela cheia">⛶</button>
+  <button id="btnFullscreen" title="Pantalla completa">⛶</button>
 
   <!-- Overlay exibido quando o celular está em pé (portrait) -->
   <div id="rotateOverlay">
     <div class="icon">📱</div>
-    <p>Gire o celular para jogar!<br>Este jogo é melhor na horizontal.</p>
+    <p>¡Gira el celular para jugar!<br>Este juego se ve mejor en horizontal.</p>
   </div>
 
   <script src="js/assets.js"></script>
@@ -176,19 +176,19 @@
     }
 
     window.addEventListener('error', function (ev) {
-      telaDeErro('Erro de script', (ev.filename || '') + ' : ' + ev.message);
+      telaDeErro('Error de script', (ev.filename || '') + ' : ' + ev.message);
     });
 
     // Loop, zonas e progressão agora vivem em game.js
     checkAssetsLoaded(function () {
       if (typeof startGame !== 'function') {
-        telaDeErro('js/game.js não carregou', 'Confira se o arquivo existe no repositório');
+        telaDeErro('js/game.js no se cargó', 'Verifica que el archivo exista en el repositorio');
         return;
       }
       try {
         startGame();
       } catch (err) {
-        telaDeErro('Erro ao iniciar', err && err.message);
+        telaDeErro('Error al iniciar', err && err.message);
       }
     });
   </script>
