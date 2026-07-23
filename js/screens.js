@@ -67,11 +67,12 @@ function drawTitleScreen() {
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
   }
 
-  // botão JOGAR
-  var bw = CANVAS.width * 0.30;
-  var bh = CANVAS.height * 0.13;
+  // botão JOGAR — na faixa central, não em cima das três crianças
+  // (elas ocupam a parte de baixo da arte, a partir de ~58% da altura)
+  var bw = CANVAS.width * 0.28;
+  var bh = CANVAS.height * 0.12;
   var bx = (CANVAS.width - bw) / 2;
-  var by = CANVAS.height * 0.72;
+  var by = CANVAS.height * 0.42;
 
   var pulse = 1 + Math.sin(Date.now() / 380) * 0.04;
   var pw = bw * pulse, ph = bh * pulse;
