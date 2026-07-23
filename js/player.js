@@ -48,11 +48,10 @@ var FRUIT_SPEED  = FRUIT_SPEED_BASE;
 
 var MAX_JUMPS    = 2;
 var DIZZY_DURATION  = 60;  // 1s a 60fps
-// Cadência do arremesso. Com 20 frames eram 3 frutas por segundo —
-// segurando o botão o jogo virava metralhadora e derrubava bulldozer
-// em 1,7s, tornando tudo trivial. Com 38 fica em ~1,6 por segundo:
-// ainda contínuo (como você preferiu), mas cada fruta conta.
-var THROW_COOLDOWN  = 38;
+// Intervalo mínimo entre frutas. Agora que existe a trava de "soltar
+// pra atirar de novo", o cooldown pode ser curto: ele só evita toque
+// duplo acidental, e a criança sente o botão respondendo na hora.
+var THROW_COOLDOWN  = 16;
 var FRAME_DELAY     = 6;
 
 function updatePhysicsScale() {
@@ -85,6 +84,7 @@ var P = {
   throwTimer: 0,
   throwHoldFrames: 0,
   starTimer: 0,      // invencibilidade da estrelinha (frames)
+  throwKeyLatched: false,
   spin: 0,
   spinAngle: 0
 };
@@ -157,10 +157,15 @@ function updatePlayer() {
     P.spinAngle = 0;
   }
 
-  // Arremesso
+  // Arremesso — UM TOQUE, UMA FRUTA.
+  // Segurar o botão não dispara em rajada: é preciso soltar e apertar
+  // de novo. Sem isso, dava pra correr segurando o botão e limpar a
+  // tela inteira antes dos inimigos aparecerem.
   if (P.throwTimer > 0) P.throwTimer--;
-  if (KEYS.throw && P.throwTimer === 0) {
+  if (!KEYS.throw) P.throwKeyLatched = false;
+  if (KEYS.throw && !P.throwKeyLatched && P.throwTimer === 0) {
     throwFruit();
+    P.throwKeyLatched = true;
     P.throwTimer = THROW_COOLDOWN;
     P.throwHoldFrames = 8;
   }
@@ -187,8 +192,10 @@ function updateAnimation() {
 function throwFruit() {
   var fruitType = CHARACTER_FRUIT[SELECTED_CHAR];
   var charH = SPRITE_TARGET_HEIGHT.character;
+  var x0 = P.x + (P.dir * charH * 0.3);
   FRUITS.push({
-    x: P.x + (P.dir * charH * 0.3),
+    x: x0,
+    x0: x0,          // origem, pra medir o alcance percorrido
     y: P.y - charH * 0.55,
     dir: P.dir,
     type: fruitType,
@@ -197,7 +204,15 @@ function throwFruit() {
   if (typeof playSFX === 'function') playSFX('sfx_throw');
 }
 
+// Alcance da fruta, em fração da largura da tela. Antes ela só sumia
+// depois de 1920px ABSOLUTOS — três telas inteiras num celular. Era
+// isso que permitia matar inimigos que ainda nem tinham aparecido.
+// Com 0.55 ela ainda cruza boa parte do campo de visão à frente da
+// Kiara (que fica a 28% da tela), mas não alcança fora da tela.
+var FRUIT_RANGE_PCT = 0.55;
+
 function updateFruits() {
+  var alcance = CANVAS.width * FRUIT_RANGE_PCT;
   for (var i = FRUITS.length - 1; i >= 0; i--) {
     var f = FRUITS[i];
     f.x += FRUIT_SPEED * f.dir;
@@ -206,7 +221,8 @@ function updateFruits() {
       f.frameTimer = 0;
       f.frame = (f.frame + 1) % 4;
     }
-    if (Math.abs(f.x - P.x) > 1920) FRUITS.splice(i, 1);
+    var percorrido = Math.abs(f.x - (f.x0 !== undefined ? f.x0 : P.x));
+    if (percorrido > alcance) FRUITS.splice(i, 1);
   }
 }
 
