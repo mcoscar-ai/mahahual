@@ -175,6 +175,21 @@ loadImage('puzzle_jaguar_reference', 'puzzle/jaguar/jaguar_reference.png');
 loadSequence('puzzle_tucano_piece', 'puzzle/tucano/tucano_piece_', 8);
 loadImage('puzzle_tucano_reference', 'puzzle/tucano/tucano_reference.png');
 
+// Animais da selva de Tulum — peças com aba, cortadas do original
+loadSequence('puzzle_coati_piece', 'puzzle/coati/coati_piece_', 4);
+loadImage('puzzle_coati_reference', 'puzzle/coati/coati_reference.png');
+loadSequence('puzzle_iguana_piece', 'puzzle/iguana/iguana_piece_', 6);
+loadImage('puzzle_iguana_reference', 'puzzle/iguana/iguana_reference.png');
+loadSequence('puzzle_flamenco_piece', 'puzzle/flamenco/flamenco_piece_', 8);
+loadImage('puzzle_flamenco_reference', 'puzzle/flamenco/flamenco_reference.png');
+loadSequence('puzzle_pavo_piece', 'puzzle/pavo/pavo_piece_', 9);
+loadImage('puzzle_pavo_reference', 'puzzle/pavo/pavo_reference.png');
+loadSequence('puzzle_cenzontle_piece', 'puzzle/cenzontle/cenzontle_piece_', 12);
+loadImage('puzzle_cenzontle_reference', 'puzzle/cenzontle/cenzontle_reference.png');
+loadSequence('puzzle_tortuga_piece', 'puzzle/tortuga/tortuga_piece_', 16);
+loadImage('puzzle_tortuga_reference', 'puzzle/tortuga/tortuga_reference.png');
+
+
 // ═══════════════════════════════════════════════════════════════
 // BACKGROUNDS E TELAS
 // ═══════════════════════════════════════════════════════════════
