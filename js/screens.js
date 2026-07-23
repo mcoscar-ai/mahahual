@@ -14,7 +14,7 @@
 // Perfis: multiplicadores sobre os valores base da física.
 // Diferenças pequenas, pra não confundir criança de 5-9 anos.
 var CHARACTER_PROFILES = {
-  kiara:  { speed: 1.00, jump: 1.00, label: 'Kiara',  fruta: 'Mamey',  traco: 'Equilibrada' },
+  kiara:  { speed: 1.00, jump: 1.00, label: 'Kiara',  fruta: 'Papaya', traco: 'Equilibrada' },
   ainhoa: { speed: 0.90, jump: 1.15, label: 'Ainhoa', fruta: 'Pitaya', traco: 'Saltadora'  },
   thiago: { speed: 1.18, jump: 0.92, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
 };
@@ -67,7 +67,7 @@ function drawTitleScreen() {
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
   }
 
-  // botão JOGAR — na faixa central, não em cima das três crianças
+  // botão JUGAR — na faixa central, não em cima das três crianças
   // (elas ocupam a parte de baixo da arte, a partir de ~58% da altura)
   var bw = CANVAS.width * 0.28;
   var bh = CANVAS.height * 0.12;
@@ -90,7 +90,7 @@ function drawTitleScreen() {
   CTX.textAlign = 'center';
   CTX.textBaseline = 'middle';
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
-  CTX.fillText('JOGAR', CANVAS.width / 2, py + ph / 2);
+  CTX.fillText('JUGAR', CANVAS.width / 2, py + ph / 2);
   CTX.textAlign = 'left';
   CTX.textBaseline = 'alphabetic';
 
@@ -114,7 +114,7 @@ function drawSelectScreen() {
   CTX.textAlign = 'center';
   CTX.fillStyle = '#fff';
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
-  CTX.fillText('Escolha seu guardião', CANVAS.width / 2, CANVAS.height * 0.15);
+  CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.15);
 
   var n = CHAR_ORDER.length;
   var cardW = CANVAS.width * 0.24;
@@ -175,7 +175,7 @@ function drawSelectScreen() {
 
   CTX.font = Math.round(CANVAS.height * 0.034) + 'px sans-serif';
   CTX.fillStyle = '#fff';
-  CTX.fillText('Toque uma vez para ver, de novo para começar',
+  CTX.fillText('Toca una vez para ver, otra para empezar',
     CANVAS.width / 2, CANVAS.height * 0.92);
   CTX.textAlign = 'left';
 }
@@ -190,7 +190,7 @@ function drawZoneCompleteScreen() {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
   }
-  drawTransitionText('Zona ' + GAME.zone + ' completa!', 'Toque para continuar');
+  drawTransitionText('¡Zona ' + GAME.zone + ' completa!', 'Toca para continuar');
   addButton(0, 0, CANVAS.width, CANVAS.height, function () { advanceFromScreen(); });
 }
 
@@ -203,7 +203,7 @@ function drawWinScreen() {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
   }
-  drawTransitionText('Mahahual está salva!', 'Toque para jogar de novo');
+  drawTransitionText('¡Mahahual está a salvo!', 'Toca para jugar de nuevo');
   addButton(0, 0, CANVAS.width, CANVAS.height, function () { GAME.state = 'title'; });
 }
 
@@ -215,7 +215,7 @@ function drawTransitionText(titulo, rodape) {
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.085) + 'px sans-serif';
   CTX.fillText(titulo, CANVAS.width / 2, CANVAS.height * 0.47);
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
-  CTX.fillText('Pontos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
+  CTX.fillText('Puntos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
   CTX.font = Math.round(CANVAS.height * 0.038) + 'px sans-serif';
   CTX.fillText(rodape, CANVAS.width / 2, CANVAS.height * 0.61);
   CTX.textAlign = 'left';
