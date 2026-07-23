@@ -30,6 +30,7 @@ function hudRoundRect(ctx, x, y, w, h, r) {
 
 // Área do botão de sair, preenchida a cada frame (usada pelo toque)
 var HUD_EXIT_RECT = { x: 0, y: 0, w: 0, h: 0 };
+var HUD_SOM_RECT  = { x: 0, y: 0, w: 0, h: 0 };
 
 function drawHUD(ctx) {
   // Só aparece durante o jogo — nas telas de transição atrapalharia
@@ -66,14 +67,60 @@ function drawHUD(ctx) {
   ctx.fillStyle = 'rgba(12, 45, 22, 0.85)';
   ctx.fillRect(hcx - r * 0.24, hcy + r * 0.28, r * 0.48, r * 0.72);
 
-  // ── Nome da zona (à direita do botão) ──────────────────────
+  // ── Botão de som (ao lado da casinha) ──────────────────────
+  var somX = pad * 2 + btnS;
+  HUD_SOM_RECT = { x: somX, y: pad, w: btnS, h: btnS };
+
+  ctx.fillStyle = 'rgba(12, 45, 22, 0.62)';
+  hudRoundRect(ctx, somX, pad, btnS, btnS, btnS / 2);
+  ctx.fill();
+
+  var scx = somX + btnS / 2;
+  var scy = pad + btnS / 2;
+  var sr = btnS * 0.24;
+  var ligado = (typeof AUDIO_LIGADO === 'undefined') ? true : AUDIO_LIGADO;
+
+  // alto-falante
+  ctx.fillStyle = ligado ? '#ffd75e' : '#8d9b8f';
+  ctx.beginPath();
+  ctx.moveTo(scx - sr * 0.9, scy - sr * 0.32);
+  ctx.lineTo(scx - sr * 0.35, scy - sr * 0.32);
+  ctx.lineTo(scx + sr * 0.25, scy - sr * 0.95);
+  ctx.lineTo(scx + sr * 0.25, scy + sr * 0.95);
+  ctx.lineTo(scx - sr * 0.35, scy + sr * 0.32);
+  ctx.lineTo(scx - sr * 0.9, scy + sr * 0.32);
+  ctx.closePath();
+  ctx.fill();
+
+  if (ligado) {
+    // ondas de som
+    ctx.strokeStyle = '#ffd75e';
+    ctx.lineWidth = Math.max(2, btnS * 0.06);
+    for (var w = 1; w <= 2; w++) {
+      ctx.beginPath();
+      ctx.arc(scx + sr * 0.35, scy, sr * (0.35 + w * 0.32), -Math.PI / 3, Math.PI / 3);
+      ctx.stroke();
+    }
+  } else {
+    // X de mudo
+    ctx.strokeStyle = '#e8622b';
+    ctx.lineWidth = Math.max(2, btnS * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(scx + sr * 0.5, scy - sr * 0.5);
+    ctx.lineTo(scx + sr * 1.15, scy + sr * 0.5);
+    ctx.moveTo(scx + sr * 1.15, scy - sr * 0.5);
+    ctx.lineTo(scx + sr * 0.5, scy + sr * 0.5);
+    ctx.stroke();
+  }
+
+  // ── Nome da zona (à direita dos botões) ────────────────────
   var zonaCfg = (typeof ZONES !== 'undefined') ? ZONES[GAME.zone] : null;
   var nomeZona = zonaCfg ? zonaCfg.name : '';
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
 
-  var painelX = pad * 2 + btnS;
+  var painelX = pad * 3 + btnS * 2;
   var rotulo = 'Zona ' + GAME.zone;
 
   // A barra de progresso é centralizada; o painel não pode alcançá-la.
@@ -203,5 +250,11 @@ CANVAS.addEventListener('pointerdown', function (e) {
   if (sx >= b.x && sx <= b.x + b.w && sy >= b.y && sy <= b.y + b.h) {
     GAME.state = 'title';
     GAME.score = 0;
+    return;
+  }
+
+  var m = HUD_SOM_RECT;
+  if (sx >= m.x && sx <= m.x + m.w && sy >= m.y && sy <= m.y + m.h) {
+    if (typeof alternarAudio === 'function') alternarAudio();
   }
 });
