@@ -169,9 +169,6 @@ function startZone(n) {
     spawnBoss(cfg.boss, Math.round((cfg.lengthScreens - 1.2) * CANVAS.width));
   }
 
-  // Placas fixas: obstáculos previsíveis que só se passa pulando.
-  if (typeof spawnPlacasFixas === 'function') spawnPlacasFixas(WORLD_WIDTH);
-
   // Itens coletáveis (lixo) — quando items.js existir.
   if (typeof spawnZoneItems === 'function') {
     spawnZoneItems(n, WORLD_WIDTH);
