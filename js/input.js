@@ -61,9 +61,19 @@ btnThrow.style.background = 'rgba(220,60,50,0.75)';    // vermelho, igual ao Gab
 function layoutBtns() {
   var W = window.innerWidth;
   var H = window.innerHeight;
-  var size = Math.min(W, H) * 0.14;
-  var gap  = Math.min(W, H) * 0.05;
-  var margin = size * 0.4;
+
+  // Tamanho dos controles: 24% da menor dimensão da tela.
+  // Referência: Apple HIG pede no mínimo 44pt e o Material Design 48dp,
+  // mas isso vale pra interface comum. Controle de jogo de ação, apertado
+  // repetidamente e sem olhar, precisa de bem mais — e criança pequena,
+  // com coordenação fina em formação, precisa de mais ainda.
+  // Antes estava em 0.14 (~50px num celular), quase no mínimo absoluto.
+  // Agora dá ~86px no mesmo aparelho, com limites pra não ficar minúsculo
+  // em telas pequenas nem exagerado em tablet.
+  var base = Math.min(W, H);
+  var size = Math.min(Math.max(base * 0.24, 64), 120);
+  var gap  = Math.max(base * 0.045, 14);   // espaço entre botões evita toque errado
+  var margin = size * 0.30;
 
   [btnLeft, btnRight, btnJump, btnThrow].forEach(function (b) {
     b.style.width = size + 'px';
