@@ -65,6 +65,9 @@ function spawnZoneItems(zone, worldWidth) {
     pos += larguraTela * (0.34 + Math.random() * 0.28);
     i++;
   }
+
+  if (typeof spawnZoneStars === 'function') spawnZoneStars(worldWidth);
+
   return i;
 }
 
@@ -157,4 +160,117 @@ function drawItems(ctx, cameraX) {
     ctx.restore();
   }
   ctx.textAlign = 'left';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ESTRELINHA — power-up de invencibilidade (estilo Mario)
+// Rara, flutua brilhando. Ao pegar, a Kiara fica imune por 15s e
+// derrota inimigos ao encostar. Desenhada por código (não há sprite
+// de estrela no projeto).
+// ═══════════════════════════════════════════════════════════════
+
+var ESTRELAS = [];
+var ESTRELA_DURACAO = 600;        // 10s a 60fps
+var ESTRELA_HEIGHT_PCT = 0.095;   // um pouco maior que o lixo, pra destacar
+
+function estrelaAltura() {
+  return Math.round(CANVAS.height * ESTRELA_HEIGHT_PCT);
+}
+
+function spawnZoneStars(worldWidth) {
+  ESTRELAS.length = 0;
+  var larguraTela = CANVAS.width;
+  // ~3 por zona (55 telas): rara o bastante pra ser um momento especial
+  var pos = larguraTela * (7 + Math.random() * 2);
+
+  while (pos < worldWidth - larguraTela * 1.5) {
+    var apice = 0;
+    if (typeof JUMP_FORCE_1 !== 'undefined' && typeof GRAVITY !== 'undefined') {
+      apice = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
+    }
+    ESTRELAS.push({
+      x: Math.round(pos),
+      y: Math.round(GROUND_Y - apice * 0.55),
+      bobPhase: Math.random() * Math.PI * 2,
+      giro: 0
+    });
+    pos += larguraTela * (16 + Math.random() * 2);
+  }
+  return ESTRELAS.length;
+}
+
+function updateStars() {
+  var alt = estrelaAltura();
+  var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.28;
+  var pRight = P.x + SPRITE_TARGET_HEIGHT.character * 0.28;
+  var pTop = P.y - SPRITE_TARGET_HEIGHT.character;
+  var pBottom = P.y;
+
+  for (var i = ESTRELAS.length - 1; i >= 0; i--) {
+    var st = ESTRELAS[i];
+    if (Math.abs(P.x - st.x) > CANVAS.width) continue;
+
+    st.bobPhase += 0.05;
+    st.giro += 0.045;
+
+    var sy = st.y + Math.sin(st.bobPhase) * alt * 0.22;
+    var meia = alt * 0.5;
+
+    if (pRight > st.x - meia && pLeft < st.x + meia &&
+        pBottom > sy - meia && pTop < sy + meia) {
+      ESTRELAS.splice(i, 1);
+      P.starTimer = ESTRELA_DURACAO;
+      if (typeof addScore === 'function') addScore(100);
+      ITEM_POPUPS.push({ x: st.x, y: sy - alt * 0.5, t: 0 });
+      if (typeof playSFX === 'function') playSFX('sfx_star');
+    }
+  }
+}
+
+function desenhaEstrela(ctx, cx, cy, raio, giro) {
+  ctx.beginPath();
+  for (var i = 0; i < 10; i++) {
+    var r = (i % 2 === 0) ? raio : raio * 0.46;
+    var a = giro + i * Math.PI / 5 - Math.PI / 2;
+    var x = cx + Math.cos(a) * r;
+    var y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function drawStars(ctx, cameraX) {
+  var alt = estrelaAltura();
+
+  for (var i = 0; i < ESTRELAS.length; i++) {
+    var st = ESTRELAS[i];
+    var sx = st.x - cameraX;
+    if (sx < -alt * 2 || sx > CANVAS.width + alt * 2) continue;
+
+    var sy = st.y + Math.sin(st.bobPhase) * alt * 0.22;
+    var t = Date.now() / 120;
+
+    // halo pulsante
+    ctx.save();
+    ctx.globalAlpha = 0.30 + Math.sin(t * 2) * 0.10;
+    ctx.fillStyle = '#fff3a8';
+    ctx.beginPath();
+    ctx.arc(sx, sy, alt * 0.85, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // estrela dourada girando
+    ctx.save();
+    desenhaEstrela(ctx, sx, sy, alt * 0.5, st.giro);
+    var g = ctx.createLinearGradient(sx - alt / 2, sy - alt / 2, sx + alt / 2, sy + alt / 2);
+    g.addColorStop(0, '#fff8c9');
+    g.addColorStop(0.5, '#ffd75e');
+    g.addColorStop(1, '#f5a623');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = '#c97f12';
+    ctx.lineWidth = Math.max(2, alt * 0.045);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
