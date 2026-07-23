@@ -18,8 +18,23 @@ var AUDIO_DESTRAVADO = false;
 var MUSICA_ATUAL = null;      // chave da música tocando
 var MUSICA_OBJ = null;        // elemento Audio em reprodução
 
-var VOLUME_MUSICA = 0.40;     // música fica atrás; SFX precisa se destacar
-var VOLUME_SFX = 0.75;
+var VOLUME_MUSICA = 0.75;     // música em primeiro plano
+var VOLUME_SFX = 0.40;        // base dos efeitos, ajustada por chave abaixo
+
+// Volume próprio de cada efeito (multiplica VOLUME_SFX).
+// Os que tocam o tempo todo — pulo, arremesso, coleta — ficam bem
+// baixos, senão viram um matraquear constante por cima da música.
+// Os raros e importantes (estrela, boss derrotado) podem se destacar.
+var VOLUME_POR_SFX = {
+  sfx_jump:        0.28,
+  sfx_throw:       0.34,
+  sfx_coleta:      0.45,
+  sfx_dizzy:       0.85,
+  sfx_boss_hit:    0.75,
+  sfx_boss_defeat: 1.00,
+  sfx_star:        1.00,
+  sfx_hit:         0.80
+};
 
 // Efeitos que ainda não têm arquivo próprio usam um parecido.
 // Quando o .ogg/.wav definitivo entrar em assets.js, o mapa deixa de
@@ -69,7 +84,12 @@ function playSFX(chave) {
   try {
     // clona pra permitir sons sobrepostos (o original cortaria o anterior)
     var som = base.cloneNode();
-    som.volume = VOLUME_SFX;
+    // volume pela chave PEDIDA (não pelo substituto): assim sfx_throw
+    // continua baixo mesmo tocando o arquivo do pulo
+    var mult = VOLUME_POR_SFX[chave];
+    if (mult === undefined) mult = VOLUME_POR_SFX[real];
+    if (mult === undefined) mult = 1;
+    som.volume = Math.max(0, Math.min(1, VOLUME_SFX * mult));
     var p = som.play();
     if (p && p.catch) p.catch(function () {});
   } catch (e) {
