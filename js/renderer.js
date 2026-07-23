@@ -196,10 +196,12 @@ function updateSpriteTargetHeights() {
 
     // Velocidade recalculada em % da LARGURA do canvas — mantém o movimento
     // proporcional em qualquer tela (celular sem fullscreen, tablet, etc.)
+    var multVel = (typeof dificuldadeAtual === 'function')
+      ? dificuldadeAtual().velocidade : 1;
     Object.keys(ENEMY_TYPES).forEach(function (type) {
       var cfg = ENEMY_TYPES[type];
       if (typeof cfg.speedPct === 'number') {
-        cfg.speed = cfg.speedPct * CANVAS.width;
+        cfg.speed = cfg.speedPct * CANVAS.width * multVel;
       }
     });
   }
