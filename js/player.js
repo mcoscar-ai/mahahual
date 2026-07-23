@@ -213,7 +213,9 @@ function updateFruits() {
 function playerGetHit() {
   if (P.starTimer > 0) return; // estrelinha: imune a tudo
   if (P.invulnerable || P.dizzyTimer > 0) return;
-  P.dizzyTimer = DIZZY_DURATION;
+  var multTontura = (typeof dificuldadeAtual === 'function')
+    ? dificuldadeAtual().tontura : 1;
+  P.dizzyTimer = Math.round(DIZZY_DURATION * multTontura);
   P.invulnerable = true;
   P.frame = 0;
   if (typeof playSFX === 'function') playSFX('sfx_dizzy');
