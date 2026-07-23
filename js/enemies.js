@@ -228,7 +228,10 @@ function updateEnemies() {
     // Robô: finca placa como aviso antes de continuar avançando.
     e.actionTimer--;
     if (e.actionTimer <= 0) {
-      if (e.type === 'robot' && Math.abs(P.x - e.x) < CANVAS.width * 0.6) {
+      // Só finca quando o robô está de fato dentro da tela, pra criança
+      // ver o gesto — antes plantava a 0.6 tela de distância, fora da vista.
+      var telaX = e.x - CAM.x;
+      if (e.type === 'robot' && telaX > 0 && telaX < CANVAS.width) {
         e.state = 'sign_plant';
         e.frame = 0;
         e.plantouPlaca = false; // a placa nasce no meio da animação
@@ -490,8 +493,34 @@ function placaAltura() {
   return Math.round(CANVAS.height * PLACA_HEIGHT_PCT);
 }
 
+// Placas FIXAS: obstáculos previsíveis do cenário. Não são destruídas
+// pela fruta — só se passa pulando. Poucas por zona, e baixas o
+// bastante pro pulo simples limpar com folga.
+function spawnPlacasFixas(worldWidth) {
+  // remove só as fixas antigas, preserva as que o robô plantou
+  for (var i = PLACAS.length - 1; i >= 0; i--) {
+    if (PLACAS[i].fixa) PLACAS.splice(i, 1);
+  }
+
+  var larguraTela = CANVAS.width;
+  var pos = larguraTela * (4 + Math.random() * 2);
+  var n = 0;
+  while (pos < worldWidth - larguraTela * 1.5) {
+    PLACAS.push({
+      x: Math.round(pos),
+      caindo: false, quedaTimer: 0, dirQueda: 1,
+      removed: false, fixa: true
+    });
+    pos += larguraTela * (7.5 + Math.random() * 2);
+    n++;
+  }
+  return n;
+}
+
 function spawnPlaca(x) {
-  if (PLACAS.length >= PLACA_MAX) return;
+  var plantadas = 0;
+  for (var k = 0; k < PLACAS.length; k++) if (!PLACAS[k].fixa) plantadas++;
+  if (plantadas >= PLACA_MAX) return;
   // evita duas placas praticamente no mesmo ponto
   for (var i = 0; i < PLACAS.length; i++) {
     if (Math.abs(PLACAS[i].x - x) < placaAltura() * 0.8) return;
@@ -499,9 +528,13 @@ function spawnPlaca(x) {
   PLACAS.push({ x: x, caindo: false, quedaTimer: 0, dirQueda: 1, removed: false });
 }
 
+function placaAlturaDe(pl) {
+  // fixas são mais baixas: precisam ser limpas com o pulo simples
+  return Math.round(placaAltura() * (pl.fixa ? 0.72 : 1));
+}
+
 function updatePlacas() {
-  var alt = placaAltura();
-  var meiaLarg = alt * 0.42;
+  var meiaLargBase = placaAltura() * 0.42;
 
   for (var i = PLACAS.length - 1; i >= 0; i--) {
     var pl = PLACAS[i];
@@ -513,14 +546,21 @@ function updatePlacas() {
       continue;
     }
 
-    if (Math.abs(P.x - pl.x) > CANVAS.width * 1.8) { pl.removed = true; continue; }
+    // fixas nunca somem (o jogador pode voltar); só ficam ociosas
+    if (Math.abs(P.x - pl.x) > CANVAS.width * 1.8) {
+      if (!pl.fixa) { pl.removed = true; }
+      continue;
+    }
 
+    var alt = placaAlturaDe(pl);
+    var meiaLarg = alt * 0.42;
     var plLeft = pl.x - meiaLarg, plRight = pl.x + meiaLarg;
     var plTop = GROUND_Y - alt, plBottom = GROUND_Y;
 
-    // fruta derruba a placa
+    // fruta derruba a placa — mas as FIXAS são indestrutíveis
     var derrubou = false;
-    for (var f = FRUITS.length - 1; f >= 0; f--) {
+    if (pl.fixa) { var pulaFruta = true; }
+    for (var f = FRUITS.length - 1; !pl.fixa && f >= 0; f--) {
       var fr = FRUITS[f];
       var fs = SPRITE_TARGET_HEIGHT.fruit;
       if (fr.x + fs / 2 > plLeft && fr.x - fs / 2 < plRight &&
@@ -548,10 +588,9 @@ function updatePlacas() {
 }
 
 function drawPlacas(ctx, cameraX) {
-  var alt = placaAltura();
-
   for (var i = 0; i < PLACAS.length; i++) {
     var pl = PLACAS[i];
+    var alt = placaAlturaDe(pl);
     var sx = pl.x - cameraX;
     if (sx < -alt * 2 || sx > CANVAS.width + alt * 2) continue;
 
@@ -575,8 +614,9 @@ function drawPlacas(ctx, cameraX) {
     ctx.fillStyle = '#6d4520';
     ctx.fillRect(-posteW / 2, -alt * 0.62, posteW * 0.35, alt * 0.62);
 
-    // tábua
-    ctx.fillStyle = '#d9a05b';
+    // tábua — fixas em madeira escura, pra criança aprender que nelas
+    // não adianta atirar; as do robô ficam claras
+    ctx.fillStyle = pl.fixa ? '#9c6b3f' : '#d9a05b';
     ctx.fillRect(-tabuaW / 2, tabuaY, tabuaW, tabuaH);
     ctx.strokeStyle = '#8a5a2b';
     ctx.lineWidth = Math.max(2, alt * 0.035);
