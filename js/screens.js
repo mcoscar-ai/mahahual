@@ -102,6 +102,26 @@ function drawTitleScreen() {
   CTX.textBaseline = 'alphabetic';
 
   addButton(bx, by, bw, bh, function () { GAME.state = 'select'; });
+
+  // Dica de som: navegadores só liberam áudio depois do primeiro toque,
+  // então na primeira vez o título abre em silêncio. Este aviso convida
+  // o toque que destrava a música, e some assim que ela começa.
+  if (typeof AUDIO_DESTRAVADO !== 'undefined' && !AUDIO_DESTRAVADO) {
+    var pisca = 0.55 + Math.sin(Date.now() / 500) * 0.35;
+    CTX.save();
+    CTX.globalAlpha = pisca;
+    CTX.textAlign = 'center';
+    CTX.font = Math.round(CANVAS.height * 0.036) + 'px sans-serif';
+    CTX.lineWidth = Math.max(2, CANVAS.height * 0.006);
+    CTX.strokeStyle = 'rgba(12, 45, 22, 0.85)';
+    CTX.strokeText('♪ Toca la pantalla para activar el sonido',
+      CANVAS.width / 2, CANVAS.height * 0.955);
+    CTX.fillStyle = '#ffffff';
+    CTX.fillText('♪ Toca la pantalla para activar el sonido',
+      CANVAS.width / 2, CANVAS.height * 0.955);
+    CTX.restore();
+    CTX.textAlign = 'left';
+  }
 }
 
 // ── Tela de seleção de personagem ────────────────────────────
@@ -309,7 +329,7 @@ function drawScreen() {
 
 // ── Toque nas telas ──────────────────────────────────────────
 CANVAS.addEventListener('pointerdown', function (e) {
-  if (GAME.state === 'playing') return;
+  if (GAME.state === 'playing' || GAME.state === 'puzzle') return;
   handleScreenTap(e.clientX, e.clientY);
 });
 
