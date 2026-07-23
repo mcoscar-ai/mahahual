@@ -19,6 +19,13 @@ var CHARACTER_PROFILES = {
   thiago: { speed: 1.18, jump: 0.92, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
 };
 
+// ═══════════════════════════════════════════════════════════════
+// MODO DE TESTE — botões pra pular direto pra qualquer zona.
+// Pra tirar quando o jogo estiver pronto: basta trocar para false
+// (ou apagar os blocos marcados com "MODO_TESTE" neste arquivo).
+// ═══════════════════════════════════════════════════════════════
+var MODO_TESTE = true;
+
 var CHAR_ORDER = ['kiara', 'ainhoa', 'thiago'];
 var selectHover = 0; // índice destacado na seleção
 
@@ -173,10 +180,43 @@ function drawSelectScreen() {
     })(i, nome);
   }
 
-  CTX.font = Math.round(CANVAS.height * 0.034) + 'px sans-serif';
+  CTX.font = Math.round(CANVAS.height * 0.030) + 'px sans-serif';
   CTX.fillStyle = '#fff';
   CTX.fillText('Toca una vez para ver, otra para empezar',
-    CANVAS.width / 2, CANVAS.height * 0.92);
+    CANVAS.width / 2, CANVAS.height * (MODO_TESTE ? 0.83 : 0.92));
+
+  // ── MODO_TESTE: atalho pra qualquer zona ────────────────────
+  if (MODO_TESTE) {
+    var tbW = CANVAS.width * 0.15;
+    var tbH = CANVAS.height * 0.085;
+    var tbGap = CANVAS.width * 0.02;
+    var tbTotal = 3 * tbW + 2 * tbGap;
+    var tbX0 = (CANVAS.width - tbTotal) / 2;
+    var tbY = CANVAS.height * 0.87;
+
+    for (var z = 1; z <= 3; z++) {
+      var tbX = tbX0 + (z - 1) * (tbW + tbGap);
+      CTX.fillStyle = 'rgba(60, 60, 60, 0.85)';
+      hudRoundRect(CTX, tbX, tbY, tbW, tbH, tbH / 2);
+      CTX.fill();
+      CTX.strokeStyle = '#9ad1ff';
+      CTX.lineWidth = Math.max(2, CANVAS.height * 0.004);
+      hudRoundRect(CTX, tbX, tbY, tbW, tbH, tbH / 2);
+      CTX.stroke();
+
+      CTX.fillStyle = '#9ad1ff';
+      CTX.font = 'bold ' + Math.round(CANVAS.height * 0.040) + 'px sans-serif';
+      CTX.fillText('Zona ' + z, tbX + tbW / 2, tbY + tbH * 0.62);
+
+      (function (zona) {
+        addButton(tbX, tbY, tbW, tbH, function () {
+          applyCharacterProfile(CHAR_ORDER[selectHover]);
+          startZone(zona);
+        });
+      })(z);
+    }
+  }
+
   CTX.textAlign = 'left';
 }
 
@@ -237,3 +277,15 @@ CANVAS.addEventListener('pointerdown', function (e) {
   if (GAME.state === 'playing') return;
   handleScreenTap(e.clientX, e.clientY);
 });
+
+
+// ── MODO_TESTE: teclas 1, 2 e 3 pulam de zona a qualquer momento ──
+// Apagar junto com o resto do modo de teste.
+if (MODO_TESTE) {
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') {
+      var z = parseInt(e.code.replace('Digit', ''), 10);
+      if (typeof startZone === 'function') startZone(z);
+    }
+  });
+}
