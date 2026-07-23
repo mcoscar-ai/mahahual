@@ -175,6 +175,7 @@ function startZone(n) {
   FRUITS.length = 0;
   if (typeof BARRIS !== 'undefined') BARRIS.length = 0;
   if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
+  if (typeof BOSS !== 'undefined') BOSS = null;
   P.starTimer = 0;
 
   // Densidade: mantém uma fração dos inimigos, distribuída de forma
@@ -227,6 +228,8 @@ function zoneProgress() {
 }
 
 function checkZoneEnd() {
+  // com boss vivo a passagem está bloqueada (ver updateBoss)
+  if (typeof bossBloqueando === 'function' && bossBloqueando()) return;
   var finishLine = WORLD_WIDTH - CANVAS.width * 0.15;
   if (P.x >= finishLine) {
     GAME.state = (GAME.zone >= GAME.maxZone) ? 'win' : 'zone_complete';
@@ -335,6 +338,7 @@ function gameLoop() {
     if (typeof updatePlacas === 'function') updatePlacas();
     if (typeof updateItems === 'function') updateItems();
     if (typeof updateStars === 'function') updateStars();
+    if (typeof updateBoss === 'function') updateBoss();
     checkZoneEnd();
   } else {
     pollAdvanceInput();
