@@ -140,7 +140,7 @@ function bossAtaqueInvestida(b) {
   b.fumacaTimer--;
   if (b.fumacaTimer <= 0) {
     var sentido = (P.x >= b.x) ? 1 : -1;
-    spawnNuvem(b.x + sentido * CANVAS.width * 0.05, GROUND_Y, sentido);
+    spawnNuvem(b.x + sentido * CANVAS.width * 0.13, GROUND_Y, sentido);
     b.fumacaTimer = 170 + Math.floor(Math.random() * 120);
   }
 
@@ -395,7 +395,11 @@ function drawBoss(ctx, cameraX) {
 var NUVENS = [];
 var NUVEM_VIDA = 260;                // ~4,3s
 var NUVEM_ALTURA_PCT = 0.11;         // altura total, bem abaixo do pulo
-var NUVEM_VEL_PCT = 2.0 / 1920;
+// A 2.0 a nuvem andava 0,67 px/frame e o boss 0,53 — ela parecia
+// colada nele. Em 6.0 ela é quase 4x mais rápida que o boss, então
+// de fato é ARREMESSADA contra a Kiara, mas ainda mais lenta que a
+// corrida dela (que é ~4,7 px/frame), dando tempo de ver e pular.
+var NUVEM_VEL_PCT = 6.0 / 1920;
 
 function nuvemAltura() {
   return Math.round(CANVAS.height * NUVEM_ALTURA_PCT);
