@@ -1,326 +1,376 @@
 // ═══════════════════════════════════════════════════════════════
-// SCREENS.JS — Guardiões de Mahahual
-// Tela de título, seleção de personagem e telas de transição.
+// GAME.JS — Guardiões de Mahahual
+// Loop principal, máquina de estados, zonas e progressão.
 //
-// Carregado DEPOIS de game.js. Assume os estados 'title' e 'select'
-// (novos) e reaproveita 'zone_complete' e 'win' (antes desenhados
-// provisoriamente pelo game.js).
+// Carregado DEPOIS de enemies.js. Substitui o loop que antes vivia
+// solto dentro do index.html.
 //
-// Cada personagem tem uma fruta (já em CHARACTER_FRUIT) e um perfil
-// de física próprio, aplicado ao escolher. O Thiago gira no pulo duplo
-// (tratado no player.js).
+// DECISÃO IMPORTANTE — zonas medidas em LARGURAS DE TELA:
+// antes o mundo tinha 96.000px fixos. Como as velocidades escalam
+// com o canvas, isso fazia uma zona valer ~17 telas no PC e ~50 no
+// celular — a mesma zona ficava 3x mais longa no aparelho menor.
+// Agora o comprimento é declarado em telas, então a travessia dura
+// o mesmo tempo em qualquer aparelho.
 // ═══════════════════════════════════════════════════════════════
 
-// Perfis: multiplicadores sobre os valores base da física.
-// Diferenças pequenas, pra não confundir criança de 5-9 anos.
-var CHARACTER_PROFILES = {
-  kiara:  { speed: 1.00, jump: 1.00, label: 'Kiara',  fruta: 'Papaya', traco: 'Equilibrada' },
-  ainhoa: { speed: 0.90, jump: 1.15, label: 'Ainhoa', fruta: 'Pitaya', traco: 'Saltadora'  },
-  thiago: { speed: 1.18, jump: 0.92, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
+// ── Dificuldade ──────────────────────────────────────────────
+// Ajusta PARÂMETROS do que já existe — não cria inimigos nem posições
+// novas, então não há risco de spawn em cima de outro ou em lugar
+// impossível. "medio" é exatamente o jogo original.
+var DIFICULDADES = {
+  facil:   { rotulo: 'Fácil',   densidade: 0.55, velocidade: 0.85, barril: 1.6, tontura: 1.0 },
+  medio:   { rotulo: 'Medio',   densidade: 1.00, velocidade: 1.00, barril: 1.0, tontura: 1.0 },
+  dificil: { rotulo: 'Difícil', densidade: 1.00, velocidade: 1.30, barril: 0.6, tontura: 1.5 }
 };
 
-// ═══════════════════════════════════════════════════════════════
-// MODO DE TESTE — botões pra pular direto pra qualquer zona.
-// Pra tirar quando o jogo estiver pronto: basta trocar para false
-// (ou apagar os blocos marcados com "MODO_TESTE" neste arquivo).
-// ═══════════════════════════════════════════════════════════════
-var MODO_TESTE = true;
+var DIFICULDADE = 'facil'; // padrão
 
-var CHAR_ORDER = ['kiara', 'ainhoa', 'thiago'];
-var selectHover = 0; // índice destacado na seleção
-
-// Aplica o perfil do personagem escolhido aos multiplicadores da física.
-// player.js multiplica os valores base por estes ao recalcular a escala.
-var CHAR_SPEED_MULT = 1;
-var CHAR_JUMP_MULT = 1;
-
-function applyCharacterProfile(nome) {
-  SELECTED_CHAR = nome;
-  var pf = CHARACTER_PROFILES[nome] || CHARACTER_PROFILES.kiara;
-  CHAR_SPEED_MULT = pf.speed;
-  CHAR_JUMP_MULT = pf.jump;
+function dificuldadeAtual() {
+  return DIFICULDADES[DIFICULDADE] || DIFICULDADES.facil;
 }
 
-// ── Botões invisíveis clicáveis (title/select) ───────────────
-// Guardamos as áreas desenhadas a cada frame pra testar o toque.
-var screenButtons = [];
+var GAME = {
+  state: 'loading',  // loading | playing | zone_complete | win
+  zone: 1,
+  score: 0,
+  maxZone: 3
+};
 
-function addButton(x, y, w, h, action) {
-  screenButtons.push({ x: x, y: y, w: w, h: h, action: action });
+// ── Configuração das zonas ───────────────────────────────────
+// "at" é a posição em LARGURAS DE TELA a partir do início da zona.
+var ZONES = {
+  1: {
+    name: 'La Playa Olvidada',
+    lengthScreens: 55,
+    boss: 'boss_bulldozer',
+    enemies: [
+      { type: 'bulldozer', at: 1.8 },
+      { type: 'drone', at: 2.4 },
+      { type: 'bulldozer', at: 4.0 },
+      { type: 'bulldozer', at: 6.0 },
+      { type: 'bulldozer', at: 7.9 },
+      { type: 'bulldozer', at: 9.6 },
+      { type: 'bulldozer', at: 11.2 },
+      { type: 'bulldozer', at: 12.9 },
+      { type: 'drone', at: 14.6 },
+      { type: 'drone', at: 16.3 },
+      { type: 'drone', at: 18.4 },
+      { type: 'drone', at: 20.0 },
+      { type: 'drone', at: 21.5 },
+      { type: 'bulldozer', at: 23.4 },
+      { type: 'bulldozer', at: 25.3 },
+      { type: 'bulldozer', at: 27.0 },
+      { type: 'bulldozer', at: 28.7 },
+      { type: 'drone', at: 30.7 },
+      { type: 'drone', at: 32.8 },
+      { type: 'drone', at: 34.4 },
+      { type: 'bulldozer', at: 36.3 },
+      { type: 'drone', at: 37.0 },
+      { type: 'bulldozer', at: 38.9 },
+      { type: 'drone', at: 41.0 },
+      { type: 'bulldozer', at: 42.6 },
+      { type: 'drone', at: 44.3 },
+      { type: 'bulldozer', at: 45.9 },
+      { type: 'bulldozer', at: 47.5 },
+      { type: 'drone', at: 49.4 },
+      { type: 'drone', at: 51.2 }
+    ]
+  },
+  2: {
+    name: 'La Selva Herida',
+    lengthScreens: 55,
+    boss: 'bossdrone',
+    enemies: [
+      { type: 'drone', at: 1.8 },
+      { type: 'drone', at: 3.3 },
+      { type: 'drone', at: 4.0 },
+      { type: 'caminhao', at: 7.2 },
+      { type: 'drone', at: 9.6 },
+      { type: 'drone', at: 11.7 },
+      { type: 'drone', at: 12.3 },
+      { type: 'drone', at: 13.9 },
+      { type: 'drone', at: 14.6 },
+      { type: 'drone', at: 16.5 },
+      { type: 'drone', at: 17.2 },
+      { type: 'drone', at: 18.8 },
+      { type: 'caminhao', at: 21.8 },
+      { type: 'drone', at: 24.2 },
+      { type: 'drone', at: 26.1 },
+      { type: 'drone', at: 27.9 },
+      { type: 'drone', at: 30.6 },
+      { type: 'caminhao', at: 33.3 },
+      { type: 'drone', at: 35.7 },
+      { type: 'drone', at: 37.3 },
+      { type: 'drone', at: 39.1 },
+      { type: 'caminhao', at: 41.8 },
+      { type: 'drone', at: 44.2 },
+      { type: 'drone', at: 45.7 },
+      { type: 'drone', at: 47.4 },
+      { type: 'drone', at: 49.1 },
+      { type: 'drone', at: 50.8 }
+    ]
+  },
+  3: {
+    name: 'El Corazón de Mahahual',
+    lengthScreens: 55,
+    boss: 'bossrobot',
+    enemies: [
+      { type: 'robot', at: 1.8 },
+      { type: 'robot', at: 3.8 },
+      { type: 'robot', at: 5.6 },
+      { type: 'robot', at: 7.7 },
+      { type: 'robot', at: 8.3 },
+      { type: 'robot', at: 9.9 },
+      { type: 'robot', at: 10.5 },
+      { type: 'robot', at: 12.4 },
+      { type: 'robot', at: 14.3 },
+      { type: 'robot', at: 15.9 },
+      { type: 'robot', at: 17.8 },
+      { type: 'robot', at: 18.4 },
+      { type: 'robot', at: 20.1 },
+      { type: 'robot', at: 22.0 },
+      { type: 'robot', at: 23.7 },
+      { type: 'robot', at: 25.6 },
+      { type: 'robot', at: 27.6 },
+      { type: 'drone', at: 29.1 },
+      { type: 'drone', at: 30.8 },
+      { type: 'robot', at: 32.3 },
+      { type: 'robot', at: 34.4 },
+      { type: 'robot', at: 35.0 },
+      { type: 'robot', at: 36.8 },
+      { type: 'robot', at: 38.4 },
+      { type: 'robot', at: 40.1 },
+      { type: 'drone', at: 42.0 },
+      { type: 'robot', at: 44.0 },
+      { type: 'drone', at: 44.5 },
+      { type: 'robot', at: 46.1 },
+      { type: 'robot', at: 47.8 },
+      { type: 'robot', at: 49.8 },
+      { type: 'drone', at: 51.4 }
+    ]
+  }
+};
+
+// ── Pontuação ────────────────────────────────────────────────
+// Chamada por enemies.js (acerto/derrota) e futuramente por items.js
+// e puzzle.js. Valores combinados: lixo=50, inimigo=20, boss=300, puzzle=1000.
+function addScore(pts) {
+  GAME.score += pts;
+  if (GAME.score < 0) GAME.score = 0;
 }
 
-function handleScreenTap(clientX, clientY) {
-  var rect = CANVAS.getBoundingClientRect();
-  var sx = (clientX - rect.left) * (CANVAS.width / rect.width);
-  var sy = (clientY - rect.top) * (CANVAS.height / rect.height);
-  for (var i = 0; i < screenButtons.length; i++) {
-    var b = screenButtons[i];
-    if (sx >= b.x && sx <= b.x + b.w && sy >= b.y && sy <= b.y + b.h) {
-      b.action();
-      return true;
-    }
+// ── Início de zona ───────────────────────────────────────────
+function startZone(n) {
+  GAME.zone = n;
+  var cfg = ZONES[n];
+  if (!cfg) return;
+
+  // Tamanhos e física com a escala correta ANTES de posicionar qualquer coisa
+  if (typeof updateSpriteTargetHeights === 'function') updateSpriteTargetHeights();
+  if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
+
+  WORLD_WIDTH = Math.round(cfg.lengthScreens * CANVAS.width);
+
+  ENEMIES.length = 0;
+  FRUITS.length = 0;
+  if (typeof BARRIS !== 'undefined') BARRIS.length = 0;
+  if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
+  if (typeof BOSS !== 'undefined') BOSS = null;
+  P.starTimer = 0;
+
+  // Densidade: mantém uma fração dos inimigos, distribuída de forma
+  // uniforme pela zona (acumulador, não sorteio) — assim o fácil não
+  // deixa trechos longos vazios nem aglomerados.
+  var densidade = dificuldadeAtual().densidade;
+  var acumulado = 0;
+  for (var i = 0; i < cfg.enemies.length; i++) {
+    acumulado += densidade;
+    if (acumulado < 1) continue;
+    acumulado -= 1;
+    var spec = cfg.enemies[i];
+    var x = Math.round(spec.at * CANVAS.width);
+    spawnEnemy(spec.type, x, GROUND_Y);
   }
-  return false;
+
+  // Boss no fim da zona — só quando o módulo de boss existir.
+  if (typeof spawnBoss === 'function' && cfg.boss) {
+    spawnBoss(cfg.boss, Math.round((cfg.lengthScreens - 1.2) * CANVAS.width));
+  }
+
+  // Itens coletáveis (lixo) — quando items.js existir.
+  if (typeof spawnZoneItems === 'function') {
+    spawnZoneItems(n, WORLD_WIDTH);
+  }
+
+  // Reposiciona a Kiara no começo
+  P.x = Math.round(CANVAS.width * 0.15);
+  P.y = GROUND_Y;
+  P.vx = 0;
+  P.vy = 0;
+  P.dir = 1;
+  P.onGround = true;
+  P.jumpCount = 0;
+  P.dizzyTimer = 0;
+  P.invulnerable = false;
+  P.throwTimer = 0;
+  P.state = 'idle';
+  CAM.x = 0;
+  CAM.dx = 0;
+
+  GAME.state = 'playing';
 }
 
-// ── Tela de título ───────────────────────────────────────────
-function drawTitleScreen() {
-  screenButtons = [];
-  var img = IMAGES['screen_title'];
-  if (img && img.complete) {
-    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
-  } else {
-    CTX.fillStyle = '#2a7d3a';
-    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
-  }
-
-  // botão JUGAR — na faixa central, não em cima das três crianças
-  // (elas ocupam a parte de baixo da arte, a partir de ~58% da altura)
-  var bw = CANVAS.width * 0.28;
-  var bh = CANVAS.height * 0.12;
-  var bx = (CANVAS.width - bw) / 2;
-  var by = CANVAS.height * 0.42;
-
-  var pulse = 1 + Math.sin(Date.now() / 380) * 0.04;
-  var pw = bw * pulse, ph = bh * pulse;
-  var px = (CANVAS.width - pw) / 2, py = by - (ph - bh) / 2;
-
-  CTX.fillStyle = 'rgba(232, 98, 43, 0.95)';
-  hudRoundRect(CTX, px, py, pw, ph, ph / 2);
-  CTX.fill();
-  CTX.strokeStyle = '#fff';
-  CTX.lineWidth = Math.max(2, CANVAS.height * 0.006);
-  hudRoundRect(CTX, px, py, pw, ph, ph / 2);
-  CTX.stroke();
-
-  CTX.fillStyle = '#fff';
-  CTX.textAlign = 'center';
-  CTX.textBaseline = 'middle';
-  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
-  CTX.fillText('JUGAR', CANVAS.width / 2, py + ph / 2);
-  CTX.textAlign = 'left';
-  CTX.textBaseline = 'alphabetic';
-
-  addButton(bx, by, bw, bh, function () { GAME.state = 'select'; });
+// ── Fim de zona ──────────────────────────────────────────────
+function zoneProgress() {
+  if (!WORLD_WIDTH) return 0;
+  var p = P.x / (WORLD_WIDTH - CANVAS.width * 0.15);
+  return Math.max(0, Math.min(1, p));
 }
 
-// ── Tela de seleção de personagem ────────────────────────────
-function drawSelectScreen() {
-  screenButtons = [];
-
-  var bg = IMAGES['screen_character_select'];
-  if (bg && bg.complete) {
-    CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
-    CTX.fillStyle = 'rgba(0,0,0,0.28)';
-    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
-  } else {
-    CTX.fillStyle = '#1f5e2c';
-    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+function checkZoneEnd() {
+  // com boss vivo a passagem está bloqueada (ver updateBoss)
+  if (typeof bossBloqueando === 'function' && bossBloqueando()) return;
+  var finishLine = WORLD_WIDTH - CANVAS.width * 0.15;
+  if (P.x >= finishLine) {
+    GAME.state = (GAME.zone >= GAME.maxZone) ? 'win' : 'zone_complete';
   }
-
-  CTX.textAlign = 'center';
-  CTX.fillStyle = '#fff';
-  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.062) + 'px sans-serif';
-  CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.085);
-
-  // ── Linha de dificuldade ────────────────────────────────────
-  var difOrder = ['facil', 'medio', 'dificil'];
-  var dW = CANVAS.width * 0.15;
-  var dH = CANVAS.height * 0.078;
-  var dGap = CANVAS.width * 0.018;
-  var dTotal = difOrder.length * dW + (difOrder.length - 1) * dGap;
-  var dX0 = (CANVAS.width - dTotal) / 2;
-  var dY = CANVAS.height * 0.145;
-
-  for (var d = 0; d < difOrder.length; d++) {
-    var chave = difOrder[d];
-    var dX = dX0 + d * (dW + dGap);
-    var ativo = (DIFICULDADE === chave);
-
-    CTX.fillStyle = ativo ? 'rgba(255, 215, 94, 0.95)' : 'rgba(12, 45, 22, 0.72)';
-    hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
-    CTX.fill();
-    if (ativo) {
-      CTX.strokeStyle = '#fff';
-      CTX.lineWidth = Math.max(2, CANVAS.height * 0.005);
-      hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
-      CTX.stroke();
-    }
-
-    CTX.fillStyle = ativo ? '#2a1a08' : '#ffffff';
-    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.038) + 'px sans-serif';
-    CTX.textBaseline = 'middle';
-    CTX.fillText(DIFICULDADES[chave].rotulo, dX + dW / 2, dY + dH / 2);
-    CTX.textBaseline = 'alphabetic';
-
-    (function (k) {
-      addButton(dX, dY, dW, dH, function () { DIFICULDADE = k; });
-    })(chave);
-  }
-
-  var n = CHAR_ORDER.length;
-  var cardW = CANVAS.width * 0.24;
-  var cardH = CANVAS.height * 0.49;
-  var gap = CANVAS.width * 0.04;
-  var totalW = n * cardW + (n - 1) * gap;
-  var startX = (CANVAS.width - totalW) / 2;
-  var cardY = CANVAS.height * 0.255;
-
-  for (var i = 0; i < n; i++) {
-    var nome = CHAR_ORDER[i];
-    var pf = CHARACTER_PROFILES[nome];
-    var cx = startX + i * (cardW + gap);
-    var destaque = (i === selectHover);
-
-    // cartão
-    CTX.fillStyle = destaque ? 'rgba(255, 236, 179, 0.96)' : 'rgba(12, 45, 22, 0.72)';
-    hudRoundRect(CTX, cx, cardY, cardW, cardH, CANVAS.height * 0.03);
-    CTX.fill();
-    if (destaque) {
-      CTX.strokeStyle = '#ffd75e';
-      CTX.lineWidth = Math.max(3, CANVAS.height * 0.008);
-      hudRoundRect(CTX, cx, cardY, cardW, cardH, CANVAS.height * 0.03);
-      CTX.stroke();
-    }
-
-    // sprite idle do personagem
-    var sprite = IMAGES[nome + '_idle_01'];
-    if (sprite && sprite.complete) {
-      var sh = cardH * 0.52;
-      var sscale = sh / sprite.height;
-      var sw = sprite.width * sscale;
-      CTX.drawImage(sprite, cx + (cardW - sw) / 2, cardY + cardH * 0.08, sw, sh);
-    }
-
-    // nome + traço + fruta
-    CTX.fillStyle = destaque ? '#2a1a08' : '#fff';
-    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.045) + 'px sans-serif';
-    CTX.fillText(pf.label, cx + cardW / 2, cardY + cardH * 0.70);
-
-    CTX.font = Math.round(CANVAS.height * 0.032) + 'px sans-serif';
-    CTX.fillStyle = destaque ? '#5c3b1a' : '#ffd75e';
-    CTX.fillText(pf.traco, cx + cardW / 2, cardY + cardH * 0.80);
-    CTX.fillStyle = destaque ? '#2a1a08' : '#cfe8c0';
-    CTX.fillText('Fruta: ' + pf.fruta, cx + cardW / 2, cardY + cardH * 0.90);
-
-    (function (idx, nomeSel) {
-      addButton(cx, cardY, cardW, cardH, function () {
-        if (selectHover === idx) {
-          applyCharacterProfile(nomeSel);
-          startZone(1); // começa o jogo com o personagem escolhido
-        } else {
-          selectHover = idx; // primeiro toque destaca, segundo confirma
-        }
-      });
-    })(i, nome);
-  }
-
-  CTX.font = Math.round(CANVAS.height * 0.030) + 'px sans-serif';
-  CTX.fillStyle = '#fff';
-  CTX.fillText('Toca una vez para ver, otra para empezar',
-    CANVAS.width / 2, CANVAS.height * (MODO_TESTE ? 0.80 : 0.85));
-
-  // ── MODO_TESTE: atalho pra qualquer zona ────────────────────
-  if (MODO_TESTE) {
-    var tbW = CANVAS.width * 0.15;
-    var tbH = CANVAS.height * 0.078;
-    var tbGap = CANVAS.width * 0.02;
-    var tbTotal = 3 * tbW + 2 * tbGap;
-    var tbX0 = (CANVAS.width - tbTotal) / 2;
-    var tbY = CANVAS.height * 0.845;
-
-    for (var z = 1; z <= 3; z++) {
-      var tbX = tbX0 + (z - 1) * (tbW + tbGap);
-      CTX.fillStyle = 'rgba(60, 60, 60, 0.85)';
-      hudRoundRect(CTX, tbX, tbY, tbW, tbH, tbH / 2);
-      CTX.fill();
-      CTX.strokeStyle = '#9ad1ff';
-      CTX.lineWidth = Math.max(2, CANVAS.height * 0.004);
-      hudRoundRect(CTX, tbX, tbY, tbW, tbH, tbH / 2);
-      CTX.stroke();
-
-      CTX.fillStyle = '#9ad1ff';
-      CTX.font = 'bold ' + Math.round(CANVAS.height * 0.040) + 'px sans-serif';
-      CTX.fillText('Zona ' + z, tbX + tbW / 2, tbY + tbH * 0.62);
-
-      (function (zona) {
-        addButton(tbX, tbY, tbW, tbH, function () {
-          applyCharacterProfile(CHAR_ORDER[selectHover]);
-          startZone(zona);
-        });
-      })(z);
-    }
-  }
-
-  CTX.textAlign = 'left';
 }
 
-// ── Telas de transição (assumem as do game.js) ───────────────
-function drawZoneCompleteScreen() {
-  screenButtons = [];
-  var img = IMAGES['screen_zone_complete'];
-  if (img && img.complete) {
-    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
-  } else {
-    CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
-    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+function advanceFromScreen() {
+  if (GAME.state === 'zone_complete') {
+    startZone(GAME.zone + 1);
+  } else if (GAME.state === 'win') {
+    GAME.score = 0;
+    startZone(1);
   }
-  drawTransitionText('¡Zona ' + GAME.zone + ' completa!', 'Toca para continuar');
-  addButton(0, 0, CANVAS.width, CANVAS.height, function () { advanceFromScreen(); });
 }
 
-function drawWinScreen() {
-  screenButtons = [];
-  var img = IMAGES['screen_win'];
-  if (img && img.complete) {
-    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
-  } else {
-    CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
-    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+// ── Ajuste ao redimensionar ──────────────────────────────────
+// O mundo é medido em larguras de tela, então ao mudar o tamanho do
+// canvas tudo precisa ser reescalado junto — senão a Kiara e os
+// inimigos ficariam em posições incoerentes com o novo mundo.
+var LAST_WORLD_CANVAS_W = 0;
+
+function syncWorldToCanvas() {
+  if (GAME.state === 'loading') return;
+  var w = CANVAS.width;
+  if (!LAST_WORLD_CANVAS_W || LAST_WORLD_CANVAS_W === w) {
+    LAST_WORLD_CANVAS_W = w;
+    return;
   }
-  drawTransitionText('¡Mahahual está a salvo!', 'Toca para jugar de nuevo');
-  addButton(0, 0, CANVAS.width, CANVAS.height, function () { GAME.state = 'title'; });
-}
-
-function drawTransitionText(titulo, rodape) {
-  CTX.fillStyle = 'rgba(0,0,0,0.45)';
-  CTX.fillRect(0, CANVAS.height * 0.36, CANVAS.width, CANVAS.height * 0.30);
-  CTX.textAlign = 'center';
-  CTX.fillStyle = '#fff';
-  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.085) + 'px sans-serif';
-  CTX.fillText(titulo, CANVAS.width / 2, CANVAS.height * 0.47);
-  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
-  CTX.fillText('Puntos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
-  CTX.font = Math.round(CANVAS.height * 0.038) + 'px sans-serif';
-  CTX.fillText(rodape, CANVAS.width / 2, CANVAS.height * 0.61);
-  CTX.textAlign = 'left';
-}
-
-// ── Roteador de telas (chamado pelo game.js) ─────────────────
-function drawScreen() {
-  switch (GAME.state) {
-    case 'title':         drawTitleScreen();        return true;
-    case 'select':        drawSelectScreen();       return true;
-    case 'zone_complete': drawZoneCompleteScreen(); return true;
-    case 'win':           drawWinScreen();          return true;
+  var ratio = w / LAST_WORLD_CANVAS_W;
+  WORLD_WIDTH = Math.round(WORLD_WIDTH * ratio);
+  P.x = Math.round(P.x * ratio);
+  for (var i = 0; i < ENEMIES.length; i++) {
+    ENEMIES[i].x = Math.round(ENEMIES[i].x * ratio);
   }
-  return false;
+  for (var j = 0; j < FRUITS.length; j++) {
+    FRUITS[j].x = Math.round(FRUITS[j].x * ratio);
+  }
+  CAM.x = Math.round(CAM.x * ratio);
+  LAST_WORLD_CANVAS_W = w;
 }
 
-// ── Toque nas telas ──────────────────────────────────────────
-CANVAS.addEventListener('pointerdown', function (e) {
-  if (GAME.state === 'playing') return;
-  handleScreenTap(e.clientX, e.clientY);
+window.addEventListener('resize', syncWorldToCanvas);
+window.addEventListener('orientationchange', function () {
+  setTimeout(syncWorldToCanvas, 250);
 });
 
+// ── Avanço de tela por toque/tecla (borda de subida) ─────────
+var PREV_ADVANCE_KEY = false;
 
-// ── MODO_TESTE: teclas 1, 2 e 3 pulam de zona a qualquer momento ──
-// Apagar junto com o resto do modo de teste.
-if (MODO_TESTE) {
-  window.addEventListener('keydown', function (e) {
-    if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') {
-      var z = parseInt(e.code.replace('Digit', ''), 10);
-      if (typeof startZone === 'function') startZone(z);
-    }
-  });
+function pollAdvanceInput() {
+  var pressed = !!(KEYS.jump || KEYS.throw);
+  if (pressed && !PREV_ADVANCE_KEY) advanceFromScreen();
+  PREV_ADVANCE_KEY = pressed;
+}
+
+CANVAS.addEventListener('pointerdown', function () {
+  if (GAME.state === 'zone_complete' || GAME.state === 'win') advanceFromScreen();
+});
+
+// ── Telas de transição ───────────────────────────────────────
+// Desenho provisório: quando screens.js existir, ele assume e estas
+// funções deixam de ser usadas.
+function drawTransitionScreen() {
+  var img = null;
+  var titulo = '';
+  if (GAME.state === 'zone_complete') {
+    img = IMAGES['screen_zone_complete'];
+    titulo = '¡Zona ' + GAME.zone + ' completa!';
+  } else if (GAME.state === 'win') {
+    img = IMAGES['screen_win'];
+    titulo = '¡Mahahual está a salvo!';
+  } else {
+    return;
+  }
+
+  if (img && img.complete) {
+    CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
+  } else {
+    CTX.fillStyle = 'rgba(8, 40, 18, 0.88)';
+    CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+  }
+
+  CTX.fillStyle = 'rgba(0,0,0,0.45)';
+  CTX.fillRect(0, CANVAS.height * 0.34, CANVAS.width, CANVAS.height * 0.32);
+
+  CTX.textAlign = 'center';
+  CTX.fillStyle = '#fff';
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.09) + 'px sans-serif';
+  CTX.fillText(titulo, CANVAS.width / 2, CANVAS.height * 0.46);
+
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.05) + 'px sans-serif';
+  CTX.fillText('Puntos: ' + GAME.score, CANVAS.width / 2, CANVAS.height * 0.55);
+
+  CTX.font = Math.round(CANVAS.height * 0.038) + 'px sans-serif';
+  CTX.fillText('Toca la pantalla para continuar', CANVAS.width / 2, CANVAS.height * 0.62);
+  CTX.textAlign = 'left';
+}
+
+// ── Loop principal ───────────────────────────────────────────
+function gameLoop() {
+  if (GAME.state === 'playing') {
+    updatePlayer();   // 1º: move a Kiara
+    updateCamera();   // 2º: câmera acompanha
+    updateEnemies();  // 3º: inimigos (espaço de mundo, como todo platformer)
+    if (typeof updateBarris === 'function') updateBarris();
+    if (typeof updatePlacas === 'function') updatePlacas();
+    if (typeof updateItems === 'function') updateItems();
+    if (typeof updateStars === 'function') updateStars();
+    if (typeof updateBoss === 'function') updateBoss();
+    checkZoneEnd();
+  } else {
+    pollAdvanceInput();
+  }
+
+  if (GAME.state === 'playing') {
+    render(GAME.zone);
+  } else if (typeof drawScreen === 'function' && drawScreen()) {
+    // screens.js desenhou a tela atual (title/select/zone_complete/win)
+  } else {
+    render(GAME.zone);
+    drawTransitionScreen(); // fallback provisório
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+function startGame() {
+  GAME.state = 'title';
+  // O renderer.js roda resizeCanvas() ao carregar, mas nessa hora o
+  // enemies.js ainda não existe — então o bloco que recalcula os
+  // tamanhos dos inimigos é pulado e eles ficam com os valores
+  // literais do ENEMY_TYPES até o primeiro resize. Rodando de novo
+  // aqui, com todos os módulos já carregados, tudo fica proporcional
+  // à tela desde o primeiro frame.
+  if (typeof resizeCanvas === 'function') resizeCanvas();
+
+  P.y = GROUND_Y;
+  LAST_WORLD_CANVAS_W = CANVAS.width;
+  // NÃO inicia a zona aqui — o jogo abre na tela de título. A zona só
+  // começa quando o jogador escolhe o personagem (screens.js chama
+  // startZone a partir da tela de seleção).
+  requestAnimationFrame(gameLoop);
 }
