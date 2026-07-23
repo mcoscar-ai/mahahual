@@ -252,6 +252,7 @@ function render(zone) {
   if (typeof drawBoss     === 'function') drawBoss(CTX, CAM.x);
   if (typeof drawBarris   === 'function') drawBarris(CTX, CAM.x);
   if (typeof drawPlacas   === 'function') drawPlacas(CTX, CAM.x);
+  if (typeof drawNuvens   === 'function') drawNuvens(CTX, CAM.x);
   if (typeof drawFruits   === 'function') drawFruits(CTX, CAM.x);
   if (typeof drawPlayer   === 'function') drawPlayer(CTX, CAM.x);
   if (typeof drawHUD      === 'function') drawHUD(CTX);
