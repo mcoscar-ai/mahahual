@@ -24,7 +24,7 @@ var CHARACTER_PROFILES = {
 // Pra tirar quando o jogo estiver pronto: basta trocar para false
 // (ou apagar os blocos marcados com "MODO_TESTE" neste arquivo).
 // ═══════════════════════════════════════════════════════════════
-var MODO_TESTE = true;
+var MODO_TESTE = false;
 
 // ── Progresso dos modos avulsos ──────────────────────────────
 // Guarda quais níveis já foram concluídos, pra criança ver o que
