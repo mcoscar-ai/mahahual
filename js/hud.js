@@ -40,6 +40,8 @@ function drawHUD(ctx) {
   var pad = Math.round(H * 0.025);
   var barH = Math.round(H * 0.030);
   var painelH = Math.round(H * 0.075);
+  // Barra um pouco mais estreita que antes (0.34) pra sobrar espaço ao nome
+  var BAR_PROGRESSO_W = Math.round(W * 0.28);
 
   // ── Botão de sair (casinha, canto superior esquerdo) ───────
   var btnS = painelH;
@@ -67,27 +69,36 @@ function drawHUD(ctx) {
   // ── Nome da zona (à direita do botão) ──────────────────────
   var zonaCfg = (typeof ZONES !== 'undefined') ? ZONES[GAME.zone] : null;
   var nomeZona = zonaCfg ? zonaCfg.name : '';
-  var fonteZona = Math.round(H * 0.042);
 
-  ctx.font = 'bold ' + fonteZona + 'px sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
 
   var painelX = pad * 2 + btnS;
   var rotulo = 'Zona ' + GAME.zone;
-  var larguraRotulo = ctx.measureText(rotulo).width;
 
   // A barra de progresso é centralizada; o painel não pode alcançá-la.
-  // Sem este limite, nomes longos (ex: "O Coração de Mahahual") passavam
-  // por baixo da barra.
-  var barWprev = Math.round(W * 0.34);
-  var limiteDireito = (W - barWprev) / 2 - pad;
+  var limiteDireito = (W - BAR_PROGRESSO_W) / 2 - pad;
   var larguraMax = limiteDireito - painelX;
 
-  // encurta o nome com reticências se não couber
+  // Em vez de cortar o nome com reticências, DIMINUI a fonte até caber.
+  // Nomes como "El Corazón de Mahahual" ficavam como "El Corazón ...".
+  var fonteZona = Math.round(H * 0.042);
+  var fonteMin = Math.round(H * 0.026);
+  var larguraRotulo, larguraNome;
+
+  while (true) {
+    ctx.font = 'bold ' + fonteZona + 'px sans-serif';
+    larguraRotulo = ctx.measureText(rotulo).width;
+    larguraNome = ctx.measureText(nomeZona).width;
+    if (larguraRotulo + larguraNome + pad * 2.4 <= larguraMax) break;
+    if (fonteZona <= fonteMin) break;
+    fonteZona -= 1;
+  }
+
+  // Só corta se nem na menor fonte couber (nome muito longo)
   var nomeVis = nomeZona;
   var espacoNome = larguraMax - larguraRotulo - pad * 2.4;
-  if (ctx.measureText(nomeVis).width > espacoNome) {
+  if (larguraNome > espacoNome) {
     while (nomeVis.length > 1 && ctx.measureText(nomeVis + '…').width > espacoNome) {
       nomeVis = nomeVis.slice(0, -1);
     }
@@ -132,7 +143,7 @@ function drawHUD(ctx) {
 
   // ── Barra de progresso (centro superior) ───────────────────
   var progresso = (typeof zoneProgress === 'function') ? zoneProgress() : 0;
-  var barW = Math.round(W * 0.34);
+  var barW = BAR_PROGRESSO_W;
   var barX = Math.round((W - barW) / 2);
   var barY = pad + Math.round(painelH * 0.28);
 
