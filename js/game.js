@@ -13,6 +13,22 @@
 // o mesmo tempo em qualquer aparelho.
 // ═══════════════════════════════════════════════════════════════
 
+// ── Dificuldade ──────────────────────────────────────────────
+// Ajusta PARÂMETROS do que já existe — não cria inimigos nem posições
+// novas, então não há risco de spawn em cima de outro ou em lugar
+// impossível. "medio" é exatamente o jogo original.
+var DIFICULDADES = {
+  facil:   { rotulo: 'Fácil',   densidade: 0.55, velocidade: 0.85, barril: 1.6, tontura: 1.0 },
+  medio:   { rotulo: 'Medio',   densidade: 1.00, velocidade: 1.00, barril: 1.0, tontura: 1.0 },
+  dificil: { rotulo: 'Difícil', densidade: 1.00, velocidade: 1.30, barril: 0.6, tontura: 1.5 }
+};
+
+var DIFICULDADE = 'facil'; // padrão
+
+function dificuldadeAtual() {
+  return DIFICULDADES[DIFICULDADE] || DIFICULDADES.facil;
+}
+
 var GAME = {
   state: 'loading',  // loading | playing | zone_complete | win
   zone: 1,
@@ -161,7 +177,15 @@ function startZone(n) {
   if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
   P.starTimer = 0;
 
+  // Densidade: mantém uma fração dos inimigos, distribuída de forma
+  // uniforme pela zona (acumulador, não sorteio) — assim o fácil não
+  // deixa trechos longos vazios nem aglomerados.
+  var densidade = dificuldadeAtual().densidade;
+  var acumulado = 0;
   for (var i = 0; i < cfg.enemies.length; i++) {
+    acumulado += densidade;
+    if (acumulado < 1) continue;
+    acumulado -= 1;
     var spec = cfg.enemies[i];
     var x = Math.round(spec.at * CANVAS.width);
     spawnEnemy(spec.type, x, GROUND_Y);
