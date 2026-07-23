@@ -184,7 +184,12 @@ function updateSpriteTargetHeights() {
   SPRITE_TARGET_HEIGHT.fruit     = Math.round(h * 0.04);
   SPRITE_TARGET_HEIGHT.truck     = Math.round(h * 0.14);
   if (typeof ENEMY_TYPES !== 'undefined') {
-    ENEMY_TYPES.bulldozer.targetHeight = Math.round(h * 0.15);
+    // Bulldozer: altura calculada pela física do personagem escolhido
+    // (ver bulldozerHeight em enemies.js) — sempre entre o pulo simples
+    // e o duplo, pros três personagens funcionarem igual.
+    ENEMY_TYPES.bulldozer.targetHeight = (typeof bulldozerHeight === 'function')
+      ? bulldozerHeight()
+      : Math.round(h * 0.34);
     ENEMY_TYPES.caminhao.targetHeight  = Math.round(h * 0.14);
     ENEMY_TYPES.drone.targetHeight     = Math.round(h * 0.055); // bem menor: fica leve no ar
     ENEMY_TYPES.robot.targetHeight     = Math.round(h * 0.15);
@@ -240,6 +245,7 @@ function render(zone) {
   drawBackground(zone || 1);
   drawGround(zone || 1);
   if (typeof drawItems    === 'function') drawItems(CTX, CAM.x);
+  if (typeof drawStars    === 'function') drawStars(CTX, CAM.x);
   if (typeof drawEnemies  === 'function') drawEnemies(CTX, CAM.x);
   if (typeof drawBarris   === 'function') drawBarris(CTX, CAM.x);
   if (typeof drawPlacas   === 'function') drawPlacas(CTX, CAM.x);
