@@ -221,7 +221,9 @@ function updateEnemies() {
         e.state = 'drop_barrel';
         e.frame = 0;
         if (typeof spawnBarril === 'function') spawnBarril(e.x, e.y);
-        e.barrelTimer = 660 + Math.floor(Math.random() * 420); // 11-18s (era 5-9s)
+        var multBarril = (typeof dificuldadeAtual === 'function')
+          ? dificuldadeAtual().barril : 1;
+        e.barrelTimer = Math.round((660 + Math.random() * 420) * multBarril);
       }
     }
 
