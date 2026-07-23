@@ -20,11 +20,16 @@ var PUZZLE = null;
 var PUZZLE_PONTOS = 1000;
 
 var PUZZLES_POR_ZONA = {
-  1: { tipo: 'encaixe',  animal: 'capivara', pecas: ['TL', 'TR', 'BL', 'BR'], cols: 2, linhas: 2,
+  // 'cantos': peças com aba macho/fêmea, de tamanhos diferentes, cada
+  // uma encostada no seu canto do quadro montado (capivara).
+  // 'grade': peças iguais em grade reta (tucano, jaguar).
+  1: { tipo: 'encaixe', forma: 'cantos', animal: 'capivara',
+       pecas: ['TL', 'TR', 'BL', 'BR'],
        titulo: '¡Arma el capibara!' },
   2: { tipo: 'memorama', pares: 6,
        titulo: '¡Encuentra las parejas!' },
-  3: { tipo: 'encaixe',  animal: 'tucano', pecas: ['01','02','03','04','05','06','07','08'], cols: 4, linhas: 2,
+  3: { tipo: 'encaixe', forma: 'grade', animal: 'tucano',
+       pecas: ['01','02','03','04','05','06','07','08'], cols: 4, linhas: 2,
        titulo: '¡Arma el tucán!' }
 };
 
@@ -54,57 +59,135 @@ function chavePeca(cfg, id) {
     : 'puzzle_' + cfg.animal + '_piece_' + id;
 }
 
-function iniciarEncaixe(cfg) {
-  var W = CANVAS.width, H = CANVAS.height;
+// Monta o layout em coordenadas do quadro ORIGINAL (pixels da arte).
+// Lê o tamanho real de cada PNG, então continua certo se a arte mudar.
+function layoutNatural(cfg) {
+  var itens = [], i;
 
-  // Tabuleiro central onde as peças se encaixam
-  var boardH = H * 0.46;
-  var boardW = boardH * (cfg.cols / cfg.linhas);
-  if (boardW > W * 0.46) { boardW = W * 0.46; boardH = boardW * (cfg.linhas / cfg.cols); }
-  var boardX = (W - boardW) / 2 - W * 0.13;   // deslocado, referência fica à direita
-  var boardY = H * 0.24;
+  if (cfg.forma === 'cantos') {
+    // Peças com aba: cada uma tem tamanho próprio e fica encostada no
+    // seu canto. A célula "limpa" é a menor dimensão entre as peças —
+    // o que passa disso é a aba invadindo a vizinha.
+    var menor = Infinity;
+    for (i = 0; i < cfg.pecas.length; i++) {
+      var im0 = IMAGES[chavePeca(cfg, cfg.pecas[i])];
+      if (!im0 || !im0.width) continue;
+      menor = Math.min(menor, im0.width, im0.height);
+    }
+    if (!isFinite(menor)) menor = 512;
+    var total = menor * 2;
 
-  var pw = boardW / cfg.cols;
-  var ph = boardH / cfg.linhas;
+    for (i = 0; i < cfg.pecas.length; i++) {
+      var id = cfg.pecas[i];
+      var im = IMAGES[chavePeca(cfg, id)];
+      var w = (im && im.width) ? im.width : menor;
+      var h = (im && im.height) ? im.height : menor;
+      var direita = (id.charAt(1) === 'R');
+      var embaixo = (id.charAt(0) === 'B');
+      itens.push({
+        id: id,
+        nx: direita ? (total - w) : 0,
+        ny: embaixo ? (total - h) : 0,
+        nw: w, nh: h,
+        // célula limpa, usada pra encaixe e pra ordenar a bandeja
+        cx: direita ? menor : 0,
+        cy: embaixo ? menor : 0,
+        cw: menor, ch: menor
+      });
+    }
+    return { itens: itens, totalW: total, totalH: total };
+  }
 
-  var pecas = [];
-  for (var i = 0; i < cfg.pecas.length; i++) {
+  // Grade reta: todas as peças do mesmo tamanho
+  var pw = 256, ph = 512;
+  var im1 = IMAGES[chavePeca(cfg, cfg.pecas[0])];
+  if (im1 && im1.width) { pw = im1.width; ph = im1.height; }
+
+  for (i = 0; i < cfg.pecas.length; i++) {
     var col = i % cfg.cols;
     var lin = Math.floor(i / cfg.cols);
-    pecas.push({
+    itens.push({
       id: cfg.pecas[i],
-      alvoX: boardX + col * pw,
-      alvoY: boardY + lin * ph,
+      nx: col * pw, ny: lin * ph, nw: pw, nh: ph,
+      cx: col * pw, cy: lin * ph, cw: pw, ch: ph
+    });
+  }
+  return { itens: itens, totalW: cfg.cols * pw, totalH: cfg.linhas * ph };
+}
+
+function iniciarEncaixe(cfg) {
+  var W = CANVAS.width, H = CANVAS.height;
+  var nat = layoutNatural(cfg);
+
+  // Tabuleiro: cabe na altura disponível e sobra espaço pro modelo
+  var boardH = H * 0.44;
+  var boardW = boardH * (nat.totalW / nat.totalH);
+  var maxW = W * 0.42;
+  if (boardW > maxW) { boardW = maxW; boardH = boardW * (nat.totalH / nat.totalW); }
+
+  var boardX = (W - boardW) / 2 - W * 0.14;
+  var boardY = H * 0.23;
+  var escala = boardW / nat.totalW;   // arte original -> tela
+
+  var pecas = [];
+  for (var i = 0; i < nat.itens.length; i++) {
+    var it = nat.itens[i];
+    pecas.push({
+      id: it.id,
+      // posição/tamanho de DESENHO quando encaixada
+      alvoX: boardX + it.nx * escala,
+      alvoY: boardY + it.ny * escala,
+      w: it.nw * escala,
+      h: it.nh * escala,
+      // célula limpa (sem aba), usada pra medir o encaixe
+      celX: boardX + it.cx * escala,
+      celY: boardY + it.cy * escala,
+      celW: it.cw * escala,
+      celH: it.ch * escala,
       x: 0, y: 0,
-      w: pw, h: ph,
-      colocada: false
+      colocada: false,
+      naBandeja: true
     });
   }
 
-  // Embaralha as posições iniciais na bandeja de baixo
+  // Bandeja embaixo: peças reduzidas pra caber lado a lado
   var ordem = pecas.slice();
   for (var k = ordem.length - 1; k > 0; k--) {
     var j = Math.floor(Math.random() * (k + 1));
     var t = ordem[k]; ordem[k] = ordem[j]; ordem[j] = t;
   }
-  var bandejaY = H * 0.76;
-  var vaoTotal = ordem.length * pw + (ordem.length - 1) * (W * 0.012);
-  var bx = (W - vaoTotal) / 2;
+
+  var gap = W * 0.012;
+  var somaL = 0;
+  for (var a = 0; a < ordem.length; a++) somaL += ordem[a].w;
+  var dispon = W * 0.88 - gap * (ordem.length - 1);
+  var escBandeja = Math.min(0.62, dispon / somaL);
+
+  var larguraTotal = somaL * escBandeja + gap * (ordem.length - 1);
+  var bx = (W - larguraTotal) / 2;
+  var baseY = H * 0.80;
   for (var m = 0; m < ordem.length; m++) {
-    ordem[m].x = bx + m * (pw + W * 0.012);
-    ordem[m].y = bandejaY;
-    ordem[m].origemX = ordem[m].x;
-    ordem[m].origemY = ordem[m].y;
+    ordem[m].escBandeja = escBandeja;
+    ordem[m].origemX = bx;
+    ordem[m].origemY = baseY - (ordem[m].h * escBandeja) / 2;
+    ordem[m].x = ordem[m].origemX;
+    ordem[m].y = ordem[m].origemY;
+    bx += ordem[m].w * escBandeja + gap;
   }
 
   PUZZLE = {
     tipo: 'encaixe',
     pecas: pecas,
     boardX: boardX, boardY: boardY, boardW: boardW, boardH: boardH,
+    escala: escala,
     arrastando: null,
     offX: 0, offY: 0
   };
 }
+
+// Tamanho atual de desenho da peça (menor na bandeja)
+function pecaW(p) { return p.naBandeja ? p.w * p.escBandeja : p.w; }
+function pecaH(p) { return p.naBandeja ? p.h * p.escBandeja : p.h; }
 
 function iniciarMemorama(cfg) {
   var W = CANVAS.width, H = CANVAS.height;
@@ -231,11 +314,15 @@ function puzzlePointerDown(px, py) {
     for (var i = PUZZLE.pecas.length - 1; i >= 0; i--) {
       var p = PUZZLE.pecas[i];
       if (p.colocada) continue;
-      if (px >= p.x && px <= p.x + p.w && py >= p.y && py <= p.y + p.h) {
+      if (px >= p.x && px <= p.x + pecaW(p) && py >= p.y && py <= p.y + pecaH(p)) {
         PUZZLE.arrastando = p;
-        PUZZLE.offX = px - p.x;
-        PUZZLE.offY = py - p.y;
-        // move pro fim da lista pra desenhar por cima
+        // ao pegar, a peça volta ao tamanho do tabuleiro e centraliza
+        // no dedo — assim a criança vê o tamanho real que vai encaixar
+        p.naBandeja = false;
+        PUZZLE.offX = p.w / 2;
+        PUZZLE.offY = p.h / 2;
+        p.x = px - PUZZLE.offX;
+        p.y = py - PUZZLE.offY;
         PUZZLE.pecas.splice(i, 1);
         PUZZLE.pecas.push(p);
         return;
@@ -279,14 +366,21 @@ function puzzlePointerUp() {
   var p = PUZZLE.arrastando;
   PUZZLE.arrastando = null;
 
-  // Encaixe generoso: basta chegar perto do lugar certo.
-  var tol = Math.max(p.w, p.h) * 0.55;
-  if (Math.abs(p.x - p.alvoX) < tol && Math.abs(p.y - p.alvoY) < tol) {
+  // Encaixe medido pela CÉLULA LIMPA (sem a aba), senão peças com aba
+  // grande precisariam ser soltas fora do lugar pra encaixar.
+  var offCel = { x: p.celX - p.alvoX, y: p.celY - p.alvoY };
+  var celAtualX = p.x + offCel.x;
+  var celAtualY = p.y + offCel.y;
+  var tol = Math.min(p.celW, p.celH) * 0.62;   // generoso: mão de criança
+
+  if (Math.abs(celAtualX - p.celX) < tol && Math.abs(celAtualY - p.celY) < tol) {
     p.x = p.alvoX;
     p.y = p.alvoY;
     p.colocada = true;
+    p.naBandeja = false;
     if (typeof addScore === 'function') addScore(50);
   } else {
+    p.naBandeja = true;
     p.x = p.origemX;   // volta pra bandeja
     p.y = p.origemY;
   }
@@ -356,28 +450,30 @@ function drawEncaixe(ctx) {
     ctx.fillText('modelo', rx + rw / 2, ry + rh + H * 0.035);
   }
 
-  // grade alvo
-  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-  ctx.lineWidth = Math.max(2, H * 0.005);
+  // Quadro do tabuleiro + divisórias das células limpas
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+  ctx.lineWidth = Math.max(2, H * 0.004);
   for (var i = 0; i < PUZZLE.pecas.length; i++) {
     var p = PUZZLE.pecas[i];
-    ctx.strokeRect(p.alvoX, p.alvoY, p.w, p.h);
+    if (!p.colocada) ctx.strokeRect(p.celX, p.celY, p.celW, p.celH);
   }
+  ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+  ctx.lineWidth = Math.max(3, H * 0.006);
+  ctx.strokeRect(PUZZLE.boardX, PUZZLE.boardY, PUZZLE.boardW, PUZZLE.boardH);
 
-  // peças
-  for (var k = 0; k < PUZZLE.pecas.length; k++) {
-    var pc = PUZZLE.pecas[k];
-    var im = IMAGES[chavePeca(cfg, pc.id)];
-    if (im && im.complete) {
-      ctx.drawImage(im, pc.x, pc.y, pc.w, pc.h);
-    } else {
-      ctx.fillStyle = 'rgba(200,180,120,0.85)';
-      ctx.fillRect(pc.x, pc.y, pc.w, pc.h);
-    }
-    if (!pc.colocada) {
-      ctx.strokeStyle = 'rgba(255, 215, 94, 0.9)';
-      ctx.lineWidth = Math.max(2, H * 0.004);
-      ctx.strokeRect(pc.x, pc.y, pc.w, pc.h);
+  // Peças: primeiro as encaixadas, depois as soltas (por cima)
+  for (var passo = 0; passo < 2; passo++) {
+    for (var k = 0; k < PUZZLE.pecas.length; k++) {
+      var pc = PUZZLE.pecas[k];
+      if ((passo === 0) !== !!pc.colocada) continue;
+      var dw = pecaW(pc), dh = pecaH(pc);
+      var im = IMAGES[chavePeca(cfg, pc.id)];
+      if (im && im.complete) {
+        ctx.drawImage(im, pc.x, pc.y, dw, dh);
+      } else {
+        ctx.fillStyle = 'rgba(200,180,120,0.85)';
+        ctx.fillRect(pc.x, pc.y, dw, dh);
+      }
     }
   }
 }
