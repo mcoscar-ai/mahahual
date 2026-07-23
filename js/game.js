@@ -176,6 +176,7 @@ function startZone(n) {
   if (typeof BARRIS !== 'undefined') BARRIS.length = 0;
   if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
   if (typeof BOSS !== 'undefined') BOSS = null;
+  if (typeof NUVENS !== 'undefined') NUVENS.length = 0;
   P.starTimer = 0;
 
   // Densidade: mantém uma fração dos inimigos, distribuída de forma
@@ -339,6 +340,7 @@ function gameLoop() {
     if (typeof updateItems === 'function') updateItems();
     if (typeof updateStars === 'function') updateStars();
     if (typeof updateBoss === 'function') updateBoss();
+    if (typeof updateNuvens === 'function') updateNuvens();
     checkZoneEnd();
   } else {
     pollAdvanceInput();
