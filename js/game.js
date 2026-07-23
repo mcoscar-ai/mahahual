@@ -177,6 +177,7 @@ function startZone(n) {
   if (typeof PLACAS !== 'undefined') PLACAS.length = 0;
   if (typeof BOSS !== 'undefined') BOSS = null;
   if (typeof NUVENS !== 'undefined') NUVENS.length = 0;
+  if (typeof PUZZLE !== 'undefined') PUZZLE = null;
   P.starTimer = 0;
 
   // Densidade: mantém uma fração dos inimigos, distribuída de forma
@@ -239,7 +240,12 @@ function checkZoneEnd() {
 
 function advanceFromScreen() {
   if (GAME.state === 'zone_complete') {
-    startZone(GAME.zone + 1);
+    // Puzzle obrigatório entre as zonas: só passa completando.
+    if (typeof iniciarPuzzle === 'function' && iniciarPuzzle(GAME.zone)) {
+      GAME.state = 'puzzle';
+    } else {
+      startZone(GAME.zone + 1);
+    }
   } else if (GAME.state === 'win') {
     GAME.score = 0;
     startZone(1);
@@ -348,7 +354,10 @@ function gameLoop() {
     pollAdvanceInput();
   }
 
-  if (GAME.state === 'playing') {
+  if (GAME.state === 'puzzle') {
+    if (typeof updatePuzzle === 'function') updatePuzzle();
+    if (typeof drawPuzzle === 'function') drawPuzzle(CTX);
+  } else if (GAME.state === 'playing') {
     render(GAME.zone);
   } else if (typeof drawScreen === 'function' && drawScreen()) {
     // screens.js desenhou a tela atual (title/select/zone_complete/win)
