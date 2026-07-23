@@ -34,7 +34,7 @@ var ENEMY_TYPES = {
     targetHeight: 75,
     speedPct: 2.2 / 1920,
     speed: 2.2,
-    fruitHits: 3,
+    fruitHits: 1,   // morre com um tiro (era 3): é pequeno e difícil de acertar
     states: { hover: 4, drop_barrel: 4, swarm_attack: 4 },
     hitboxScale: 0.6,   // colisão menor que o desenho — dá espaço pra ela chegar perto e atirar
     flies: true,
@@ -55,6 +55,23 @@ var ENEMY_TYPES = {
 Object.keys(ENEMY_TYPES).forEach(function (type) {
   SPRITE_TARGET_HEIGHT[type] = ENEMY_TYPES[type].targetHeight;
 });
+
+// Altura do bulldozer, calculada a partir da FÍSICA DO PERSONAGEM ATUAL.
+// Fica sempre entre o pulo simples e o pulo duplo, então:
+//   - pulo simples NUNCA passa  -> precisa aprender o pulo duplo
+//   - pulo duplo passa com folga -> não exige timing perfeito
+// Precisa ser dinâmico porque cada personagem pula diferente: com uma
+// altura fixa, a Ainhoa (+15%) passaria com pulo simples e o Thiago
+// (-8%) mal conseguiria com o duplo.
+function bulldozerHeight() {
+  if (typeof JUMP_FORCE_1 === 'undefined' || typeof GRAVITY === 'undefined') {
+    return Math.round(CANVAS.height * 0.34); // fallback antes do player.js
+  }
+  if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
+  var simples = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
+  var duplo = simples + (JUMP_FORCE_2 * JUMP_FORCE_2) / (2 * GRAVITY);
+  return Math.round(simples + (duplo - simples) * 0.42);
+}
 
 // Altura de voo do drone, calculada a partir da FÍSICA DO PULO SIMPLES.
 // O objetivo: no ápice do 1º pulo, o peito da Kiara (de onde sai a fruta)
@@ -101,7 +118,7 @@ function spawnEnemy(type, x, groundY) {
     defeated: false,
     removed: false,
     actionTimer: Math.floor(Math.random() * 120), // ação periódica (swoop do drone / placa do robô)
-    barrelTimer: 150 + Math.floor(Math.random() * 150), // timer SEPARADO: o swoop consumia o actionTimer
+    barrelTimer: 420 + Math.floor(Math.random() * 300), // timer SEPARADO: o swoop consumia o actionTimer
                                                         // antes do barril chegar a zero e ele nunca saía
     hoverPhase: Math.random() * Math.PI * 2         // pro movimento senoidal do drone
   });
@@ -204,7 +221,7 @@ function updateEnemies() {
         e.state = 'drop_barrel';
         e.frame = 0;
         if (typeof spawnBarril === 'function') spawnBarril(e.x, e.y);
-        e.barrelTimer = 300 + Math.floor(Math.random() * 240); // 5-9s
+        e.barrelTimer = 660 + Math.floor(Math.random() * 420); // 11-18s (era 5-9s)
       }
     }
 
