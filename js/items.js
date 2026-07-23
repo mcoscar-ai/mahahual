@@ -43,12 +43,21 @@ function spawnZoneItems(zone, worldWidth) {
   while (pos < limite) {
     var tipo = ITEM_TIPOS[Math.floor(Math.random() * ITEM_TIPOS.length)];
 
-    // ~50% do lixo flutua na altura do pulo simples
-    var flutua = (Math.random() < 0.5);
+    // Três alturas, pra variar o que a criança precisa fazer:
+    //   chão (~50%)      — só andar
+    //   médio (~35%)     — pulo simples
+    //   alto (~15%)      — só com pulo duplo
+    // O alto fica entre 1,05x e 1,40x o ápice do pulo simples; o pulo
+    // duplo alcança ~1,55x, então sobra folga e nada fica impossível.
+    // Faixas do sorteio: <0.50 chão | 0.50-0.85 médio | >=0.85 alto
+    var sorteio = Math.random();
+    var flutua = (sorteio >= 0.5);
+    var alto = (sorteio >= 0.85);
     var alturaVoo = 0;
     if (flutua && typeof JUMP_FORCE_1 !== 'undefined' && typeof GRAVITY !== 'undefined') {
       var apice = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
-      alturaVoo = apice * (0.45 + Math.random() * 0.35);
+      alturaVoo = apice * (alto ? (1.05 + Math.random() * 0.35)
+                                : (0.45 + Math.random() * 0.35));
     }
 
     ITENS.push({
@@ -59,6 +68,7 @@ function spawnZoneItems(zone, worldWidth) {
       frameTimer: Math.floor(Math.random() * 10),
       bobPhase: Math.random() * Math.PI * 2,
       flutua: flutua,
+      alto: alto,
       coletado: false
     });
 
@@ -131,7 +141,7 @@ function drawItems(ctx, cameraX) {
     // brilho suave em todo lixo, pra chamar atenção da criança
     // (um pouco mais forte no que flutua, que é o alvo do pulo)
     ctx.save();
-    ctx.globalAlpha = it.flutua ? 0.34 : 0.24;
+    ctx.globalAlpha = it.alto ? 0.44 : (it.flutua ? 0.34 : 0.24);
     ctx.fillStyle = '#fff3a8';
     ctx.beginPath();
     ctx.arc(sx, iy - alt * 0.5, alt * 0.60, 0, Math.PI * 2);
