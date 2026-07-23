@@ -331,6 +331,8 @@ function drawTransitionScreen() {
 
 // ── Loop principal ───────────────────────────────────────────
 function gameLoop() {
+  if (typeof atualizarMusica === 'function') atualizarMusica();
+
   if (GAME.state === 'playing') {
     updatePlayer();   // 1º: move a Kiara
     updateCamera();   // 2º: câmera acompanha
