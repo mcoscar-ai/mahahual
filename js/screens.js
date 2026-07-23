@@ -120,16 +120,51 @@ function drawSelectScreen() {
 
   CTX.textAlign = 'center';
   CTX.fillStyle = '#fff';
-  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.07) + 'px sans-serif';
-  CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.15);
+  CTX.font = 'bold ' + Math.round(CANVAS.height * 0.062) + 'px sans-serif';
+  CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.085);
+
+  // ── Linha de dificuldade ────────────────────────────────────
+  var difOrder = ['facil', 'medio', 'dificil'];
+  var dW = CANVAS.width * 0.15;
+  var dH = CANVAS.height * 0.078;
+  var dGap = CANVAS.width * 0.018;
+  var dTotal = difOrder.length * dW + (difOrder.length - 1) * dGap;
+  var dX0 = (CANVAS.width - dTotal) / 2;
+  var dY = CANVAS.height * 0.145;
+
+  for (var d = 0; d < difOrder.length; d++) {
+    var chave = difOrder[d];
+    var dX = dX0 + d * (dW + dGap);
+    var ativo = (DIFICULDADE === chave);
+
+    CTX.fillStyle = ativo ? 'rgba(255, 215, 94, 0.95)' : 'rgba(12, 45, 22, 0.72)';
+    hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
+    CTX.fill();
+    if (ativo) {
+      CTX.strokeStyle = '#fff';
+      CTX.lineWidth = Math.max(2, CANVAS.height * 0.005);
+      hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
+      CTX.stroke();
+    }
+
+    CTX.fillStyle = ativo ? '#2a1a08' : '#ffffff';
+    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.038) + 'px sans-serif';
+    CTX.textBaseline = 'middle';
+    CTX.fillText(DIFICULDADES[chave].rotulo, dX + dW / 2, dY + dH / 2);
+    CTX.textBaseline = 'alphabetic';
+
+    (function (k) {
+      addButton(dX, dY, dW, dH, function () { DIFICULDADE = k; });
+    })(chave);
+  }
 
   var n = CHAR_ORDER.length;
   var cardW = CANVAS.width * 0.24;
-  var cardH = CANVAS.height * 0.56;
+  var cardH = CANVAS.height * 0.49;
   var gap = CANVAS.width * 0.04;
   var totalW = n * cardW + (n - 1) * gap;
   var startX = (CANVAS.width - totalW) / 2;
-  var cardY = CANVAS.height * 0.22;
+  var cardY = CANVAS.height * 0.255;
 
   for (var i = 0; i < n; i++) {
     var nome = CHAR_ORDER[i];
@@ -183,16 +218,16 @@ function drawSelectScreen() {
   CTX.font = Math.round(CANVAS.height * 0.030) + 'px sans-serif';
   CTX.fillStyle = '#fff';
   CTX.fillText('Toca una vez para ver, otra para empezar',
-    CANVAS.width / 2, CANVAS.height * (MODO_TESTE ? 0.83 : 0.92));
+    CANVAS.width / 2, CANVAS.height * (MODO_TESTE ? 0.80 : 0.85));
 
   // ── MODO_TESTE: atalho pra qualquer zona ────────────────────
   if (MODO_TESTE) {
     var tbW = CANVAS.width * 0.15;
-    var tbH = CANVAS.height * 0.085;
+    var tbH = CANVAS.height * 0.078;
     var tbGap = CANVAS.width * 0.02;
     var tbTotal = 3 * tbW + 2 * tbGap;
     var tbX0 = (CANVAS.width - tbTotal) / 2;
-    var tbY = CANVAS.height * 0.87;
+    var tbY = CANVAS.height * 0.845;
 
     for (var z = 1; z <= 3; z++) {
       var tbX = tbX0 + (z - 1) * (tbW + tbGap);
