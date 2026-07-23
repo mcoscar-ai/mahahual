@@ -17,7 +17,7 @@ var BOSS = null;
 var BOSS_TYPES = {
   boss_bulldozer: {
     nome: 'Súper Bulldozer',
-    vida: 10,
+    vida: 30,
     alturaPct: 0.30,
     velocidadePct: 1.6 / 1920,
     voa: false,
@@ -30,7 +30,7 @@ var BOSS_TYPES = {
   },
   bossdrone: {
     nome: 'Dron Jefe',
-    vida: 8,
+    vida: 28,
     alturaPct: 0.20,
     velocidadePct: 1.9 / 1920,
     voa: true,
@@ -44,7 +44,7 @@ var BOSS_TYPES = {
   },
   bossrobot: {
     nome: 'Robot Supervisor',
-    vida: 12,
+    vida: 32,
     alturaPct: 0.30,
     velocidadePct: 1.3 / 1920,
     voa: false,
@@ -84,6 +84,7 @@ function spawnBoss(tipo, x) {
     frameTimer: 0,
     hitTimer: 0,
     ataqueTimer: 180,
+    fumacaTimer: 150,
     fase: 'espera',      // espera | ativo | derrotado
     investindo: 0,
     hoverPhase: 0,
@@ -132,6 +133,17 @@ function drawBossHealth(ctx) {
 
 // ── Ataques ──────────────────────────────────────────────────
 function bossAtaqueInvestida(b) {
+  // Além da investida, o Super Bulldozer solta nuvens de fumaça que
+  // rolam pelo chão em direção à Kiara — mesma ideia das placas do
+  // Robô Supervisor: um obstáculo que ele cria, e que só se passa
+  // pulando (fumaça não se destrói com fruta).
+  b.fumacaTimer--;
+  if (b.fumacaTimer <= 0) {
+    var sentido = (P.x >= b.x) ? 1 : -1;
+    spawnNuvem(b.x + sentido * CANVAS.width * 0.05, GROUND_Y, sentido);
+    b.fumacaTimer = 170 + Math.floor(Math.random() * 120);
+  }
+
   // Super Bulldozer: recua, pausa e avança rápido contra a Kiara.
   if (b.investindo > 0) {
     b.investindo--;
@@ -369,4 +381,101 @@ function drawBoss(ctx, cameraX) {
   } else {
     drawSprite(ctx, img, b.x, b.y, alt, b.dir * cfg.drawDirFlip, cameraX);
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// NUVENS DE FUMAÇA — soltadas pelo Super Bulldozer
+// Rolam pelo chão em direção à Kiara. Não se destroem com fruta
+// (é fumaça): a resposta é pular. Somem ao encostar nela, senão a
+// tontura reiniciaria em loop enquanto ela estivesse dentro.
+// Desenhadas por código — não existe sprite de fumaça no projeto.
+// ═══════════════════════════════════════════════════════════════
+
+var NUVENS = [];
+var NUVEM_VIDA = 260;                // ~4,3s
+var NUVEM_ALTURA_PCT = 0.11;         // altura total, bem abaixo do pulo
+var NUVEM_VEL_PCT = 2.0 / 1920;
+
+function nuvemAltura() {
+  return Math.round(CANVAS.height * NUVEM_ALTURA_PCT);
+}
+
+function spawnNuvem(x, y, dir) {
+  NUVENS.push({
+    x: x, y: y, dir: dir,
+    t: 0,
+    puffs: [
+      { dx: -0.55, dy: -0.10, r: 0.42, f: 0.9 },
+      { dx: -0.18, dy: -0.34, r: 0.50, f: 1.1 },
+      { dx:  0.20, dy: -0.28, r: 0.46, f: 1.0 },
+      { dx:  0.56, dy: -0.08, r: 0.40, f: 0.8 },
+      { dx:  0.02, dy: -0.02, r: 0.52, f: 1.0 }
+    ],
+    removed: false
+  });
+}
+
+function updateNuvens() {
+  var vel = NUVEM_VEL_PCT * CANVAS.width;
+  var mult = (typeof dificuldadeAtual === 'function') ? dificuldadeAtual().velocidade : 1;
+  var alt = nuvemAltura();
+
+  for (var i = NUVENS.length - 1; i >= 0; i--) {
+    var nu = NUVENS[i];
+    if (nu.removed) { NUVENS.splice(i, 1); continue; }
+
+    nu.t++;
+    nu.x += vel * mult * nu.dir;
+
+    if (nu.t > NUVEM_VIDA || Math.abs(P.x - nu.x) > CANVAS.width * 1.6) {
+      nu.removed = true;
+      continue;
+    }
+
+    var meia = alt * 0.62;
+    var nLeft = nu.x - meia, nRight = nu.x + meia;
+    var nTop = nu.y - alt, nBottom = nu.y;
+
+    var pLeft = P.x - SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pRight = P.x + SPRITE_TARGET_HEIGHT.character * 0.25;
+    var pTop = P.y - SPRITE_TARGET_HEIGHT.character;
+    var pBottom = P.y;
+
+    if (pRight > nLeft && pLeft < nRight && pBottom > nTop && pTop < nBottom) {
+      playerGetHit();
+      nu.removed = true;   // dissipa, pra não prender a criança em tontura
+    }
+  }
+}
+
+function drawNuvens(ctx, cameraX) {
+  var alt = nuvemAltura();
+
+  for (var i = 0; i < NUVENS.length; i++) {
+    var nu = NUVENS[i];
+    var sx = nu.x - cameraX;
+    if (sx < -alt * 3 || sx > CANVAS.width + alt * 3) continue;
+
+    // cresce no começo e desvanece no fim
+    var prog = nu.t / NUVEM_VIDA;
+    var escala = 0.55 + Math.min(1, nu.t / 30) * 0.45;
+    var alpha = (prog > 0.75) ? (1 - (prog - 0.75) / 0.25) : 1;
+
+    ctx.save();
+    ctx.globalAlpha = 0.72 * alpha;
+    for (var j = 0; j < nu.puffs.length; j++) {
+      var pf = nu.puffs[j];
+      var bal = Math.sin(nu.t * 0.09 + j) * alt * 0.05;
+      var cinza = 108 + j * 12;
+      ctx.fillStyle = 'rgb(' + cinza + ',' + cinza + ',' + (cinza + 6) + ')';
+      ctx.beginPath();
+      ctx.arc(sx + pf.dx * alt * escala,
+              nu.y + pf.dy * alt * escala - alt * 0.34 + bal,
+              pf.r * alt * escala * pf.f, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
