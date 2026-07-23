@@ -47,6 +47,24 @@ var NIVEIS_MEMORIA = [
 var NIVEIS_PUZZLE = [
   { forma: 'cantos', animal: 'capivara', pecas: ['TL','TR','BL','BR'],
     rotulo: 'Capibara', dificuldade: '4 piezas', titulo: '¡Arma el capibara!' },
+  { forma: 'grade', animal: 'coati', abaPct: 0.1213,
+    pecas: ['01', '02', '03', '04'], cols: 2, linhas: 2,
+    rotulo: 'Coatí', dificuldade: '4 piezas', titulo: '¡Arma el coatí!' },
+  { forma: 'grade', animal: 'iguana', abaPct: 0.12195,
+    pecas: ['01', '02', '03', '04', '05', '06'], cols: 3, linhas: 2,
+    rotulo: 'Iguana', dificuldade: '6 piezas', titulo: '¡Arma la iguana!' },
+  { forma: 'grade', animal: 'flamenco', abaPct: 0.1213,
+    pecas: ['01', '02', '03', '04', '05', '06', '07', '08'], cols: 4, linhas: 2,
+    rotulo: 'Flamenco', dificuldade: '8 piezas', titulo: '¡Arma el flamenco!' },
+  { forma: 'grade', animal: 'pavo', abaPct: 0.12195,
+    pecas: ['01', '02', '03', '04', '05', '06', '07', '08', '09'], cols: 3, linhas: 3,
+    rotulo: 'Pavo ocelado', dificuldade: '9 piezas', titulo: '¡Arma el pavo ocelado!' },
+  { forma: 'grade', animal: 'cenzontle', abaPct: 0.1213,
+    pecas: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], cols: 4, linhas: 3,
+    rotulo: 'Cenzontle', dificuldade: '12 piezas', titulo: '¡Arma el cenzontle!' },
+  { forma: 'grade', animal: 'tortuga', abaPct: 0.1213,
+    pecas: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16'], cols: 4, linhas: 4,
+    rotulo: 'Tortuga marina', dificuldade: '16 piezas', titulo: '¡Arma la tortuga!' },
   { forma: 'grade',  animal: 'jaguar',
     pecas: ['01','02','03','04','05','06','07','08'], cols: 4, linhas: 2,
     rotulo: 'Jaguar', dificuldade: '8 piezas', titulo: '¡Arma el jaguar!' },
@@ -134,21 +152,33 @@ function layoutNatural(cfg) {
     return { itens: itens, totalW: total, totalH: total };
   }
 
-  // Grade reta: todas as peças do mesmo tamanho
+  // Grade: todas as peças do mesmo tamanho.
+  // Se 'abaPct' estiver definido, são peças COM ABA de encaixe geradas
+  // pelo cortador: cada uma tem uma margem transparente igual dos quatro
+  // lados, então a posição continua uniforme — só desloca pela margem.
   var pw = 256, ph = 512;
   var im1 = IMAGES[chavePeca(cfg, cfg.pecas[0])];
   if (im1 && im1.width) { pw = im1.width; ph = im1.height; }
+
+  // abaPct é fração da LARGURA DA PEÇA. A aba tem o mesmo tamanho em
+  // pixels nos dois eixos, então não pode ser fração da célula: quando
+  // a célula não é quadrada (ex: 341x512), daria valores diferentes
+  // na horizontal e na vertical e o tabuleiro saía torto.
+  var abaPct = cfg.abaPct || 0;
+  var aba = abaPct ? (pw * abaPct) : 0;
+  var celW = pw - 2 * aba;
+  var celH = ph - 2 * aba;
 
   for (i = 0; i < cfg.pecas.length; i++) {
     var col = i % cfg.cols;
     var lin = Math.floor(i / cfg.cols);
     itens.push({
       id: cfg.pecas[i],
-      nx: col * pw, ny: lin * ph, nw: pw, nh: ph,
-      cx: col * pw, cy: lin * ph, cw: pw, ch: ph
+      nx: col * celW - aba, ny: lin * celH - aba, nw: pw, nh: ph,
+      cx: col * celW, cy: lin * celH, cw: celW, ch: celH
     });
   }
-  return { itens: itens, totalW: cfg.cols * pw, totalH: cfg.linhas * ph };
+  return { itens: itens, totalW: cfg.cols * celW, totalH: cfg.linhas * celH };
 }
 
 function iniciarEncaixe(cfg) {
