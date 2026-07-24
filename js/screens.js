@@ -93,7 +93,7 @@ function handleScreenTap(clientX, clientY) {
 function drawTitleScreen() {
   screenButtons = [];
   var img = IMAGES['screen_title'];
-  if (imgPronta(img)) {
+  if (img && img.complete) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = '#2a7d3a';
@@ -187,7 +187,7 @@ function drawSelectScreen() {
   screenButtons = [];
 
   var bg = IMAGES['screen_character_select'];
-  if (imgPronta(bg)) {
+  if (bg && bg.complete) {
     CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
     CTX.fillStyle = 'rgba(0,0,0,0.28)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
@@ -263,7 +263,7 @@ function drawSelectScreen() {
 
     // sprite idle do personagem
     var sprite = IMAGES[nome + '_idle_01'];
-    if (imgPronta(sprite)) {
+    if (sprite && sprite.complete) {
       var sh = cardH * 0.52;
       var sscale = sh / sprite.height;
       var sw = sprite.width * sscale;
@@ -351,7 +351,7 @@ function drawSelectScreen() {
 function drawZoneCompleteScreen() {
   screenButtons = [];
   var img = IMAGES['screen_zone_complete'];
-  if (imgPronta(img)) {
+  if (img && img.complete) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
@@ -364,7 +364,7 @@ function drawZoneCompleteScreen() {
 function drawWinScreen() {
   screenButtons = [];
   var img = IMAGES['screen_win'];
-  if (imgPronta(img)) {
+  if (img && img.complete) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
@@ -394,7 +394,7 @@ function drawMenuNiveis(modo) {
   screenButtons = [];
 
   var bg = IMAGES['screen_character_select'];
-  if (imgPronta(bg)) {
+  if (bg && bg.complete) {
     CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
     CTX.fillStyle = 'rgba(6, 30, 14, 0.68)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
