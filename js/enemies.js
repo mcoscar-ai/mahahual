@@ -216,7 +216,10 @@ function updateEnemies() {
     // pra criança ver o barril cair à frente e ter tempo de pular.
     if (e.type === 'drone') {
       e.barrelTimer--;
-      if (e.barrelTimer <= 0 && e.droneMode === 'patrol' &&
+      // Durante a luta do boss os drones comuns seguram os barris —
+      // o desafio deve ser o chefe, não a multidão em volta.
+      var bossAtivo = (typeof BOSS !== 'undefined' && BOSS && BOSS.fase === 'ativo');
+      if (e.barrelTimer <= 0 && e.droneMode === 'patrol' && !bossAtivo &&
           Math.abs(P.x - e.x) < CANVAS.width * 0.55) {
         e.state = 'drop_barrel';
         e.frame = 0;
