@@ -21,8 +21,13 @@
     touch-action:none;
     -webkit-tap-highlight-color:transparent;
     user-select:none;
+    /* Safari iOS: sem estes, segurar um botão abre a lupa/menu do
+       sistema — é o "zoom" que travava os controles. */
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-user-drag:none;
   }
-  #gameCanvas { display:block; touch-action:none; }
+  #gameCanvas { display:block; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; }
 
   /* Botão de tela cheia */
   #btnFullscreen {
@@ -146,6 +151,26 @@
     }
     fixAltura();
     window.addEventListener('resize', fixAltura);
+
+    // ── Safari iOS: bloqueia zoom por pinça e toque duplo ────
+    // A meta viewport com user-scalable=no é IGNORADA pelo Safari desde
+    // o iOS 10. Sem bloquear estes gestos a página dá zoom, e aí as
+    // coordenadas do toque deixam de bater com o canvas — os controles
+    // param de responder.
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
+    });
+
+    // toque duplo rápido também dá zoom no Safari
+    var ultimoToque = 0;
+    document.addEventListener('touchend', function (e) {
+      var agora = Date.now();
+      if (agora - ultimoToque < 320) e.preventDefault();
+      ultimoToque = agora;
+    }, { passive: false });
+
+    // menu de contexto (segurar) some junto
+    document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
     // ── Aviso "gire o celular" (jogo é landscape-only) ───────
     var rotateOverlay = document.getElementById('rotateOverlay');
