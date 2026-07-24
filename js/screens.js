@@ -14,9 +14,9 @@
 // Perfis: multiplicadores sobre os valores base da física.
 // Diferenças pequenas, pra não confundir criança de 5-9 anos.
 var CHARACTER_PROFILES = {
-  kiara:  { speed: 1.00, jump: 1.00, label: 'Kiara',  fruta: 'Papaya', traco: 'Equilibrada' },
-  ainhoa: { speed: 0.90, jump: 1.15, label: 'Ainhoa', fruta: 'Pitaya', traco: 'Saltadora'  },
-  thiago: { speed: 1.18, jump: 0.92, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
+  kiara:  { speed: 1.00, jump: 1.00, recarga: 1.50, label: 'Kiara',  fruta: 'Papaya', traco: 'Tiro doble' },
+  ainhoa: { speed: 0.90, jump: 1.15, recarga: 1.00, label: 'Ainhoa', fruta: 'Pitaya', traco: 'Saltadora'  },
+  thiago: { speed: 1.18, jump: 0.92, recarga: 1.00, label: 'Thiago', fruta: 'Coco',   traco: 'Veloz'      }
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -57,12 +57,14 @@ var selectHover = 0; // índice destacado na seleção
 // player.js multiplica os valores base por estes ao recalcular a escala.
 var CHAR_SPEED_MULT = 1;
 var CHAR_JUMP_MULT = 1;
+var CHAR_THROW_MULT = 1;   // recarga do arremesso
 
 function applyCharacterProfile(nome) {
   SELECTED_CHAR = nome;
   var pf = CHARACTER_PROFILES[nome] || CHARACTER_PROFILES.kiara;
   CHAR_SPEED_MULT = pf.speed;
   CHAR_JUMP_MULT = pf.jump;
+  CHAR_THROW_MULT = pf.recarga || 1;
 }
 
 // ── Botões invisíveis clicáveis (title/select) ───────────────
@@ -91,7 +93,7 @@ function handleScreenTap(clientX, clientY) {
 function drawTitleScreen() {
   screenButtons = [];
   var img = IMAGES['screen_title'];
-  if (img && img.complete) {
+  if (imgPronta(img)) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = '#2a7d3a';
@@ -185,7 +187,7 @@ function drawSelectScreen() {
   screenButtons = [];
 
   var bg = IMAGES['screen_character_select'];
-  if (bg && bg.complete) {
+  if (imgPronta(bg)) {
     CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
     CTX.fillStyle = 'rgba(0,0,0,0.28)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
@@ -261,7 +263,7 @@ function drawSelectScreen() {
 
     // sprite idle do personagem
     var sprite = IMAGES[nome + '_idle_01'];
-    if (sprite && sprite.complete) {
+    if (imgPronta(sprite)) {
       var sh = cardH * 0.52;
       var sscale = sh / sprite.height;
       var sw = sprite.width * sscale;
@@ -349,7 +351,7 @@ function drawSelectScreen() {
 function drawZoneCompleteScreen() {
   screenButtons = [];
   var img = IMAGES['screen_zone_complete'];
-  if (img && img.complete) {
+  if (imgPronta(img)) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
@@ -362,7 +364,7 @@ function drawZoneCompleteScreen() {
 function drawWinScreen() {
   screenButtons = [];
   var img = IMAGES['screen_win'];
-  if (img && img.complete) {
+  if (imgPronta(img)) {
     CTX.drawImage(img, 0, 0, CANVAS.width, CANVAS.height);
   } else {
     CTX.fillStyle = 'rgba(8, 40, 18, 0.9)';
@@ -392,7 +394,7 @@ function drawMenuNiveis(modo) {
   screenButtons = [];
 
   var bg = IMAGES['screen_character_select'];
-  if (bg && bg.complete) {
+  if (imgPronta(bg)) {
     CTX.drawImage(bg, 0, 0, CANVAS.width, CANVAS.height);
     CTX.fillStyle = 'rgba(6, 30, 14, 0.68)';
     CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
