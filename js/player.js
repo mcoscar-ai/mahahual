@@ -8,7 +8,7 @@
 
 // ── Helper: desenha sprite ancorado pelos pés, escalado ────────
 function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
-  if (!imgPronta(img)) return null;
+  if (!img || !img.complete) return null;
   var scale   = targetHeight / img.height;
   var drawW   = img.width * scale;
   var drawH   = targetHeight;
@@ -306,7 +306,7 @@ function drawPlayer(ctx, cameraX) {
 
   // Giro do Thiago: rotaciona o desenho em torno do próprio centro,
   // sem mexer na colisão. Se não estiver girando, desenho normal.
-  if (P.spin && P.spinAngle && imgPronta(img)) {
+  if (P.spin && P.spinAngle && img && img.complete) {
     var h = SPRITE_TARGET_HEIGHT.character;
     var scale = h / img.height;
     var w = img.width * scale;
