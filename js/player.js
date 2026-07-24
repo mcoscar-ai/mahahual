@@ -8,7 +8,7 @@
 
 // ── Helper: desenha sprite ancorado pelos pés, escalado ────────
 function drawSprite(ctx, img, worldX, worldY, targetHeight, dir, cameraX) {
-  if (!img || !img.complete) return null;
+  if (!imgPronta(img)) return null;
   var scale   = targetHeight / img.height;
   var drawW   = img.width * scale;
   var drawH   = targetHeight;
@@ -85,6 +85,8 @@ var P = {
   throwHoldFrames: 0,
   starTimer: 0,      // invencibilidade da estrelinha (frames)
   throwKeyLatched: false,
+  tiroExtra: 0,        // frutas ainda por sair no tiro duplo da Kiara
+  tiroExtraTimer: 0,
   spin: 0,
   spinAngle: 0
 };
@@ -157,6 +159,17 @@ function updatePlayer() {
     P.spinAngle = 0;
   }
 
+  // Segunda fruta do tiro duplo da Kiara — sai logo depois da primeira,
+  // em fila, não ao mesmo tempo.
+  if (P.tiroExtra > 0) {
+    P.tiroExtraTimer--;
+    if (P.tiroExtraTimer <= 0) {
+      P.tiroExtra--;
+      lancarFruta(true);
+      P.tiroExtraTimer = 7;
+    }
+  }
+
   // Arremesso — UM TOQUE, UMA FRUTA.
   // Segurar o botão não dispara em rajada: é preciso soltar e apertar
   // de novo. Sem isso, dava pra correr segurando o botão e limpar a
@@ -166,7 +179,8 @@ function updatePlayer() {
   if (KEYS.throw && !P.throwKeyLatched && P.throwTimer === 0) {
     throwFruit();
     P.throwKeyLatched = true;
-    P.throwTimer = THROW_COOLDOWN;
+    var multRecarga = (typeof CHAR_THROW_MULT !== 'undefined') ? CHAR_THROW_MULT : 1;
+    P.throwTimer = Math.round(THROW_COOLDOWN * multRecarga);
     P.throwHoldFrames = 8;
   }
   if (P.throwHoldFrames > 0) P.throwHoldFrames--;
@@ -190,18 +204,33 @@ function updateAnimation() {
 }
 
 function throwFruit() {
-  var fruitType = CHARACTER_FRUIT[SELECTED_CHAR];
+  lancarFruta(false);
+  // Habilidade da Kiara: tiro duplo. A segunda fruta é agendada e sai
+  // alguns frames depois, formando uma dupla em fila.
+  if (SELECTED_CHAR === 'kiara') {
+    P.tiroExtra = 1;
+    P.tiroExtraTimer = 7;
+  }
+}
+
+function lancarFruta(extra) {
   var charH = SPRITE_TARGET_HEIGHT.character;
+  var fruitType = CHARACTER_FRUIT[SELECTED_CHAR];
   var x0 = P.x + (P.dir * charH * 0.3);
   FRUITS.push({
     x: x0,
     x0: x0,          // origem, pra medir o alcance percorrido
-    y: P.y - charH * 0.55,
+    // a segunda sai um pouco mais baixa, pra dar pra ver que são duas
+    y: P.y - charH * (extra ? 0.46 : 0.55),
     dir: P.dir,
     type: fruitType,
     frame: 0, frameTimer: 0
   });
-  if (typeof playSFX === 'function') playSFX('sfx_throw');
+  if (!extra) {
+    P.state = 'throw';
+    P.frame = 0;
+    if (typeof playSFX === 'function') playSFX('sfx_throw');
+  }
 }
 
 // Alcance da fruta, em fração da largura da tela. Antes ela só sumia
@@ -277,7 +306,7 @@ function drawPlayer(ctx, cameraX) {
 
   // Giro do Thiago: rotaciona o desenho em torno do próprio centro,
   // sem mexer na colisão. Se não estiver girando, desenho normal.
-  if (P.spin && P.spinAngle && img && img.complete) {
+  if (P.spin && P.spinAngle && imgPronta(img)) {
     var h = SPRITE_TARGET_HEIGHT.character;
     var scale = h / img.height;
     var w = img.width * scale;
