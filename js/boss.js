@@ -85,6 +85,7 @@ function spawnBoss(tipo, x) {
     hitTimer: 0,
     ataqueTimer: 180,
     fumacaTimer: 150,
+    respiro: 0,
     fase: 'espera',      // espera | ativo | derrotado
     investindo: 0,
     hoverPhase: 0,
@@ -160,17 +161,19 @@ function bossAtaqueInvestida(b) {
 }
 
 function bossAtaqueRajada(b) {
-  // Drone Chefão: solta três barris seguidos, depois descansa.
+  // Drone Chefão: solta uma dupla de barris, depois descansa.
+  // Eram três num intervalo curto e sem folga — como levar barril deixa
+  // tonta, e tonta não atira, a luta esticava e gerava ainda mais barris.
   if (b.ataqueTimer <= 0) {
     b.estado = 'drop_item';
     b.frame = 0;
     if (typeof spawnBarril === 'function') {
-      spawnBarril(b.x, b.y);
-      var alcance = CANVAS.width * 0.16;
-      spawnBarril(b.x - alcance, b.y);
-      spawnBarril(b.x + alcance, b.y);
+      var alcance = CANVAS.width * 0.20;
+      spawnBarril(b.x - alcance * 0.5, b.y);
+      spawnBarril(b.x + alcance * 0.5, b.y);
     }
-    b.ataqueTimer = 220 + Math.floor(Math.random() * 140);
+    var mult = (typeof dificuldadeAtual === 'function') ? dificuldadeAtual().barril : 1;
+    b.ataqueTimer = Math.round((380 + Math.random() * 200) * mult);
     return true;
   }
   return false;
@@ -236,6 +239,18 @@ function updateBoss() {
   }
 
   // ── Ataque próprio de cada boss ───────────────────────────
+  // Nada de atacar enquanto ela está tonta (nem logo depois): sem isso,
+  // levar um golpe encadeava no próximo e a criança não conseguia sair.
+  if (P.dizzyTimer > 0) {
+    b.respiro = 45;                 // ~0,75s de folga ao voltar
+  } else if (b.respiro > 0) {
+    b.respiro--;
+  }
+  if (P.dizzyTimer > 0 || b.respiro > 0) {
+    if (cfg.voa) { b.hoverPhase += 0.05; b.y = b.baseY + Math.sin(b.hoverPhase) * alt * 0.12; }
+    return;
+  }
+
   b.ataqueTimer--;
   var atacando = false;
   if (cfg.ataque === 'investida')      atacando = bossAtaqueInvestida(b);
