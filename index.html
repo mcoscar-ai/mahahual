@@ -161,13 +161,10 @@
       document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
     });
 
-    // toque duplo rápido também dá zoom no Safari
-    var ultimoToque = 0;
-    document.addEventListener('touchend', function (e) {
-      var agora = Date.now();
-      if (agora - ultimoToque < 320) e.preventDefault();
-      ultimoToque = agora;
-    }, { passive: false });
+    // NÃO bloquear touchend aqui: o arremesso é um toque por fruta, e
+    // preventDefault em toques rápidos suprime os eventos seguintes no
+    // Safari, matando os controles. O touch-action:none do CSS já
+    // impede o zoom por toque duplo.
 
     // menu de contexto (segurar) some junto
     document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
