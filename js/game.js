@@ -20,7 +20,7 @@
 var DIFICULDADES = {
   facil:   { rotulo: 'Fácil',   densidade: 0.55, velocidade: 0.85, barril: 1.6, tontura: 1.0 },
   medio:   { rotulo: 'Medio',   densidade: 1.00, velocidade: 1.00, barril: 1.0, tontura: 1.0 },
-  dificil: { rotulo: 'Difícil', densidade: 1.00, velocidade: 1.30, barril: 0.6, tontura: 1.5 }
+  dificil: { rotulo: 'Difícil', densidade: 1.00, velocidade: 1.30, barril: 0.85, tontura: 1.3 }
 };
 
 var DIFICULDADE = 'facil'; // padrão
