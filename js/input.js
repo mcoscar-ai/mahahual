@@ -127,9 +127,10 @@ ALL_BTNS.forEach(function (b) {
   var name = btnNameFromElement(b);
   b.addEventListener('pointerdown', function (e) {
     e.preventDefault();
-    if (b.setPointerCapture) {
-      try { b.setPointerCapture(e.pointerId); } catch (err) {}
-    }
+    // Sem setPointerCapture de propósito: no Safari ele trava o ponteiro
+    // no elemento e às vezes não devolve, deixando o botão pressionado.
+    // O deslize entre botões já funciona via elementFromPoint no
+    // pointermove da janela, e o pointerup também é escutado lá.
     activeTouches[e.pointerId] = name;
     setKey(name, true);
   }, { passive: false });
@@ -162,7 +163,7 @@ window.addEventListener('pointercancel', releasePointer);
 // Deslize suave entre botões (ex: solta esquerda e desliza pra direita
 // sem tirar o dedo da tela) — só reavalia enquanto o ponteiro já está
 // pressionado em algum botão rastreado.
-mobileControls.addEventListener('pointermove', function (e) {
+window.addEventListener('pointermove', function (e) {
   if (!(e.pointerId in activeTouches)) return;
   var el = document.elementFromPoint(e.clientX, e.clientY);
   var newName = btnNameFromElement(el);
