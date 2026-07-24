@@ -141,6 +141,19 @@ function releasePointer(e) {
   delete activeTouches[e.pointerId];
 }
 
+// Rede de segurança: se o navegador cancelar o toque (troca de aba,
+// chamada, gesto do sistema), nenhuma tecla pode ficar presa — senão
+// a personagem sai andando sozinha e não para mais.
+function soltarTudo() {
+  KEYS.left = KEYS.right = KEYS.jump = KEYS.throw = false;
+  for (var id in activeTouches) delete activeTouches[id];
+}
+window.addEventListener('blur', soltarTudo);
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) soltarTudo();
+});
+window.addEventListener('touchcancel', soltarTudo);
+
 mobileControls.addEventListener('pointerup', releasePointer);
 mobileControls.addEventListener('pointercancel', releasePointer);
 window.addEventListener('pointerup', releasePointer);
