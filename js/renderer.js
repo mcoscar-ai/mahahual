@@ -56,7 +56,8 @@ function updateCamera() {
 var ZONE_BACKGROUNDS = {
   1: 'bg_zona1',
   2: 'bg_zona2',
-  3: 'bg_zona3'
+  3: 'bg_zona3',
+  relampago: 'bg_relampago'
 };
 
 // O FUNDO é a camada distante (montanhas/selva ao longe): rola devagar,
@@ -107,7 +108,9 @@ function drawBackground(zone) {
 var GROUND_PALETTE = {
   1: { top: '#efdcae', bottom: '#c9a76a', edge: '#8a6b3a', grass: '#7fa650', stone: '#b9b2a4' },
   2: { top: '#d8c79a', bottom: '#a68a58', edge: '#6f5a33', grass: '#5f8a3c', stone: '#a9a294' },
-  3: { top: '#c4b18c', bottom: '#8e7852', edge: '#5c4a2c', grass: '#4f7a34', stone: '#9a9386' }
+  3: { top: '#c4b18c', bottom: '#8e7852', edge: '#5c4a2c', grass: '#4f7a34', stone: '#9a9386' },
+  // Areia clara da praia, casando com o fundo bg_relampago
+  relampago: { top: '#f2e3ae', bottom: '#dcc07f', edge: '#b08a4a', grass: '#8fae55', stone: '#f5efe0' }
 };
 
 function drawGroundProp(sx, y, kind, pal, unit) {
