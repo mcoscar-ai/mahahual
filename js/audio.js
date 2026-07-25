@@ -151,6 +151,8 @@ function atualizarMusica() {
     case 'relampago_result': desejada = 'music_intro'; break;
     case 'corrida':          desejada = 'music_zone3'; break;
     case 'corrida_result':   desejada = 'music_intro'; break;
+    case 'ninja_eco':          desejada = 'music_zone2'; break;
+    case 'ninja_eco_result':   desejada = 'music_intro'; break;
     case 'menu_memoria':
     case 'menu_puzzle':   desejada = 'music_intro'; break;
     default:              return;
