@@ -133,7 +133,7 @@ function drawTitleScreen() {
   var mw = CANVAS.width * 0.12;
   var mh = CANVAS.height * 0.095;
   var mgap = CANVAS.width * 0.014;
-  var mtot = mw * 4 + mgap * 3;
+  var mtot = mw * 5 + mgap * 4;
   var mx0 = (CANVAS.width - mtot) / 2;
   var my = CANVAS.height * 0.445;
 
@@ -147,6 +147,9 @@ function drawTitleScreen() {
     { rot: 'CORRIDA', cor: 'rgba(180, 60, 200, 0.95)', accion: function () {
         SELECT_DESTINO = 'corrida';
         GAME.state = 'select';
+      } },
+    { rot: 'NINJA ECO', cor: 'rgba(30, 175, 150, 0.95)', accion: function () {
+        startNinjaEco();
       } }
   ];
 
@@ -544,13 +547,14 @@ function drawScreen() {
     case 'menu_puzzle':      drawMenuNiveis('menu_puzzle');  return true;
     case 'relampago_result': drawRelampagoResultScreen();    return true;
     case 'corrida_result':   drawCorridaResultScreen();     return true;
+    case 'ninja_eco_result': drawNinjaEcoResultScreen();     return true;
   }
   return false;
 }
 
 // ── Toque nas telas ──────────────────────────────────────────
 CANVAS.addEventListener('pointerdown', function (e) {
-  if (GAME.state === 'playing' || GAME.state === 'puzzle' || GAME.state === 'relampago' || GAME.state === 'corrida') return;
+  if (GAME.state === 'playing' || GAME.state === 'puzzle' || GAME.state === 'relampago' || GAME.state === 'corrida' || GAME.state === 'ninja_eco') return;
   handleScreenTap(e.clientX, e.clientY);
 });
 
