@@ -197,6 +197,7 @@ loadImage('puzzle_tortuga_reference', 'puzzle/tortuga/tortuga_reference.png');
 loadImage('bg_zona1', 'bg_zona1.png');
 loadImage('bg_zona2', 'bg_zona2.png');
 loadImage('bg_zona3', 'bg_zona3.png');
+loadImage('bg_relampago', 'bg_relampago.png');
 
 loadImage('screen_title',             'screen_title.png');
 loadImage('screen_character_select',  'screen_character_select.png');
