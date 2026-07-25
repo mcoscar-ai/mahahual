@@ -129,11 +129,11 @@ function drawTitleScreen() {
     GAME.state = 'select';
   });
 
-  // Modos avulsos, lado a lado (4º grupo do título: Memoria/Puzzles/Relámpago)
-  var mw = CANVAS.width * 0.15;
+  // Modos avulsos, lado a lado
+  var mw = CANVAS.width * 0.12;
   var mh = CANVAS.height * 0.095;
-  var mgap = CANVAS.width * 0.018;
-  var mtot = mw * 3 + mgap * 2;
+  var mgap = CANVAS.width * 0.014;
+  var mtot = mw * 4 + mgap * 3;
   var mx0 = (CANVAS.width - mtot) / 2;
   var my = CANVAS.height * 0.445;
 
@@ -142,6 +142,10 @@ function drawTitleScreen() {
     { rot: 'PUZZLES',   cor: 'rgba(46, 116, 168, 0.95)', destino: 'menu_puzzle' },
     { rot: 'RELÁMPAGO', cor: 'rgba(224, 168, 30, 0.95)', accion: function () {
         SELECT_DESTINO = 'relampago';
+        GAME.state = 'select';
+      } },
+    { rot: 'CORRIDA', cor: 'rgba(180, 60, 200, 0.95)', accion: function () {
+        SELECT_DESTINO = 'corrida';
         GAME.state = 'select';
       } }
   ];
@@ -213,7 +217,7 @@ function drawSelectScreen() {
 
   // ── Linha de dificuldade ────────────────────────────────────
   // Não se aplica ao Relámpago (não tem inimigos) — some nesse fluxo.
-  if (typeof SELECT_DESTINO === 'undefined' || SELECT_DESTINO !== 'relampago') {
+  if (typeof SELECT_DESTINO === 'undefined' || (SELECT_DESTINO !== 'relampago' && SELECT_DESTINO !== 'corrida')) {
     var difOrder = ['facil', 'medio', 'dificil'];
     var dW = CANVAS.width * 0.15;
     var dH = CANVAS.height * 0.078;
@@ -301,6 +305,9 @@ function drawSelectScreen() {
           if (typeof SELECT_DESTINO !== 'undefined' && SELECT_DESTINO === 'relampago') {
             SELECT_DESTINO = 'zone';
             startRelampago();
+          } else if (typeof SELECT_DESTINO !== 'undefined' && SELECT_DESTINO === 'corrida') {
+            SELECT_DESTINO = 'zone';
+            startCorrida();
           } else {
             startZone(1); // começa o jogo com o personagem escolhido
           }
@@ -517,13 +524,14 @@ function drawScreen() {
     case 'menu_memoria':     drawMenuNiveis('menu_memoria'); return true;
     case 'menu_puzzle':      drawMenuNiveis('menu_puzzle');  return true;
     case 'relampago_result': drawRelampagoResultScreen();    return true;
+    case 'corrida_result':   drawCorridaResultScreen();     return true;
   }
   return false;
 }
 
 // ── Toque nas telas ──────────────────────────────────────────
 CANVAS.addEventListener('pointerdown', function (e) {
-  if (GAME.state === 'playing' || GAME.state === 'puzzle' || GAME.state === 'relampago') return;
+  if (GAME.state === 'playing' || GAME.state === 'puzzle' || GAME.state === 'relampago' || GAME.state === 'corrida') return;
   handleScreenTap(e.clientX, e.clientY);
 });
 
