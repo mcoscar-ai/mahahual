@@ -124,19 +124,26 @@ function drawTitleScreen() {
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.065) + 'px sans-serif';
   CTX.fillText('JUGAR', CANVAS.width / 2, py + ph / 2);
 
-  addButton(bx, by, bw, bh, function () { GAME.state = 'select'; });
+  addButton(bx, by, bw, bh, function () {
+    if (typeof SELECT_DESTINO !== 'undefined') SELECT_DESTINO = 'zone';
+    GAME.state = 'select';
+  });
 
-  // Modos avulsos, lado a lado
-  var mw = CANVAS.width * 0.185;
+  // Modos avulsos, lado a lado (4º grupo do título: Memoria/Puzzles/Relámpago)
+  var mw = CANVAS.width * 0.15;
   var mh = CANVAS.height * 0.095;
-  var mgap = CANVAS.width * 0.022;
-  var mtot = mw * 2 + mgap;
+  var mgap = CANVAS.width * 0.018;
+  var mtot = mw * 3 + mgap * 2;
   var mx0 = (CANVAS.width - mtot) / 2;
   var my = CANVAS.height * 0.445;
 
   var modos = [
-    { rot: 'MEMORIA', cor: 'rgba(63, 143, 58, 0.95)', destino: 'menu_memoria' },
-    { rot: 'PUZZLES', cor: 'rgba(46, 116, 168, 0.95)', destino: 'menu_puzzle' }
+    { rot: 'MEMORIA',   cor: 'rgba(63, 143, 58, 0.95)',  destino: 'menu_memoria' },
+    { rot: 'PUZZLES',   cor: 'rgba(46, 116, 168, 0.95)', destino: 'menu_puzzle' },
+    { rot: 'RELÁMPAGO', cor: 'rgba(224, 168, 30, 0.95)', accion: function () {
+        SELECT_DESTINO = 'relampago';
+        GAME.state = 'select';
+      } }
   ];
 
   for (var i = 0; i < modos.length; i++) {
@@ -150,12 +157,15 @@ function drawTitleScreen() {
     hudRoundRect(CTX, mx, my, mw, mh, mh / 2);
     CTX.stroke();
     CTX.fillStyle = '#fff';
-    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.042) + 'px sans-serif';
+    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.036) + 'px sans-serif';
     CTX.fillText(m.rot, mx + mw / 2, my + mh / 2);
 
-    (function (dest) {
-      addButton(mx, my, mw, mh, function () { GAME.state = dest; });
-    })(m.destino);
+    (function (modo) {
+      addButton(mx, my, mw, mh, function () {
+        if (modo.accion) modo.accion();
+        else GAME.state = modo.destino;
+      });
+    })(m);
   }
 
   CTX.textAlign = 'left';
@@ -202,38 +212,41 @@ function drawSelectScreen() {
   CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.085);
 
   // ── Linha de dificuldade ────────────────────────────────────
-  var difOrder = ['facil', 'medio', 'dificil'];
-  var dW = CANVAS.width * 0.15;
-  var dH = CANVAS.height * 0.078;
-  var dGap = CANVAS.width * 0.018;
-  var dTotal = difOrder.length * dW + (difOrder.length - 1) * dGap;
-  var dX0 = (CANVAS.width - dTotal) / 2;
-  var dY = CANVAS.height * 0.145;
+  // Não se aplica ao Relámpago (não tem inimigos) — some nesse fluxo.
+  if (typeof SELECT_DESTINO === 'undefined' || SELECT_DESTINO !== 'relampago') {
+    var difOrder = ['facil', 'medio', 'dificil'];
+    var dW = CANVAS.width * 0.15;
+    var dH = CANVAS.height * 0.078;
+    var dGap = CANVAS.width * 0.018;
+    var dTotal = difOrder.length * dW + (difOrder.length - 1) * dGap;
+    var dX0 = (CANVAS.width - dTotal) / 2;
+    var dY = CANVAS.height * 0.145;
 
-  for (var d = 0; d < difOrder.length; d++) {
-    var chave = difOrder[d];
-    var dX = dX0 + d * (dW + dGap);
-    var ativo = (DIFICULDADE === chave);
+    for (var d = 0; d < difOrder.length; d++) {
+      var chave = difOrder[d];
+      var dX = dX0 + d * (dW + dGap);
+      var ativo = (DIFICULDADE === chave);
 
-    CTX.fillStyle = ativo ? 'rgba(255, 215, 94, 0.95)' : 'rgba(12, 45, 22, 0.72)';
-    hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
-    CTX.fill();
-    if (ativo) {
-      CTX.strokeStyle = '#fff';
-      CTX.lineWidth = Math.max(2, CANVAS.height * 0.005);
+      CTX.fillStyle = ativo ? 'rgba(255, 215, 94, 0.95)' : 'rgba(12, 45, 22, 0.72)';
       hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
-      CTX.stroke();
+      CTX.fill();
+      if (ativo) {
+        CTX.strokeStyle = '#fff';
+        CTX.lineWidth = Math.max(2, CANVAS.height * 0.005);
+        hudRoundRect(CTX, dX, dY, dW, dH, dH / 2);
+        CTX.stroke();
+      }
+
+      CTX.fillStyle = ativo ? '#2a1a08' : '#ffffff';
+      CTX.font = 'bold ' + Math.round(CANVAS.height * 0.038) + 'px sans-serif';
+      CTX.textBaseline = 'middle';
+      CTX.fillText(DIFICULDADES[chave].rotulo, dX + dW / 2, dY + dH / 2);
+      CTX.textBaseline = 'alphabetic';
+
+      (function (k) {
+        addButton(dX, dY, dW, dH, function () { DIFICULDADE = k; });
+      })(chave);
     }
-
-    CTX.fillStyle = ativo ? '#2a1a08' : '#ffffff';
-    CTX.font = 'bold ' + Math.round(CANVAS.height * 0.038) + 'px sans-serif';
-    CTX.textBaseline = 'middle';
-    CTX.fillText(DIFICULDADES[chave].rotulo, dX + dW / 2, dY + dH / 2);
-    CTX.textBaseline = 'alphabetic';
-
-    (function (k) {
-      addButton(dX, dY, dW, dH, function () { DIFICULDADE = k; });
-    })(chave);
   }
 
   var n = CHAR_ORDER.length;
@@ -285,7 +298,12 @@ function drawSelectScreen() {
       addButton(cx, cardY, cardW, cardH, function () {
         if (selectHover === idx) {
           applyCharacterProfile(nomeSel);
-          startZone(1); // começa o jogo com o personagem escolhido
+          if (typeof SELECT_DESTINO !== 'undefined' && SELECT_DESTINO === 'relampago') {
+            SELECT_DESTINO = 'zone';
+            startRelampago();
+          } else {
+            startZone(1); // começa o jogo com o personagem escolhido
+          }
         } else {
           selectHover = idx; // primeiro toque destaca, segundo confirma
         }
@@ -496,15 +514,16 @@ function drawScreen() {
     case 'select':        drawSelectScreen();       return true;
     case 'zone_complete': drawZoneCompleteScreen(); return true;
     case 'win':           drawWinScreen();          return true;
-    case 'menu_memoria':  drawMenuNiveis('menu_memoria'); return true;
-    case 'menu_puzzle':   drawMenuNiveis('menu_puzzle');  return true;
+    case 'menu_memoria':     drawMenuNiveis('menu_memoria'); return true;
+    case 'menu_puzzle':      drawMenuNiveis('menu_puzzle');  return true;
+    case 'relampago_result': drawRelampagoResultScreen();    return true;
   }
   return false;
 }
 
 // ── Toque nas telas ──────────────────────────────────────────
 CANVAS.addEventListener('pointerdown', function (e) {
-  if (GAME.state === 'playing' || GAME.state === 'puzzle') return;
+  if (GAME.state === 'playing' || GAME.state === 'puzzle' || GAME.state === 'relampago') return;
   handleScreenTap(e.clientX, e.clientY);
 });
 
