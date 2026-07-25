@@ -99,6 +99,11 @@ function startNinjaEco() {
   NINJAECO.cortesLixo = 0;
   NINJAECO.transicaoTimer = NINJAECO_TRANSICAO_DURACAO; // mostra "¡Nivel 1!" antes de começar
 
+  // Esconde botões mobile (setas/pulo/tiro) — este modo usa arrasto,
+  // não controles de plataforma. Restaurados ao sair.
+  var mc = document.getElementById('mobile-controls');
+  if (mc) mc.style.display = 'none';
+
   GAME.state = 'ninja_eco';
 }
 
@@ -134,7 +139,10 @@ function updateNinjaEco() {
       it.meioB += 0.06;
     }
     // Some quando sai da tela por baixo (sem penalidade — só o corte importa)
-    if (it.y - it.r > H + H * 0.05) NINJA_ITENS.splice(i, 1);
+    // ou quando a animação de corte já terminou (evita acúmulo de invisíveis)
+    if (it.y - it.r > H + H * 0.05 || (it.cortado && it.meioA >= 1.5)) {
+      NINJA_ITENS.splice(i, 1);
+    }
   }
 
   for (var p = NINJA_POPUPS.length - 1; p >= 0; p--) {
@@ -211,6 +219,8 @@ CANVAS.addEventListener('pointerdown', function (e) {
   if (pos.x >= b.x && pos.x <= b.x + b.w && pos.y >= b.y && pos.y <= b.y + b.h) {
     GAME.state = 'title';
     GAME.score = 0;
+    var mc = document.getElementById('mobile-controls');
+    if (mc && typeof IS_MOBILE !== 'undefined' && IS_MOBILE) mc.style.display = 'block';
     return;
   }
   var m = NINJAECO_SOM_RECT;
@@ -521,7 +531,11 @@ function drawNinjaEcoResultScreen() {
   CTX.stroke();
   CTX.fillStyle = '#fff';
   CTX.fillText('Menú', bx1 + bw / 2, by + bh / 2);
-  addButton(bx1, by, bw, bh, function () { GAME.state = 'title'; });
+  addButton(bx1, by, bw, bh, function () {
+    GAME.state = 'title';
+    var mc = document.getElementById('mobile-controls');
+    if (mc && typeof IS_MOBILE !== 'undefined' && IS_MOBILE) mc.style.display = 'block';
+  });
 
   CTX.textAlign = 'left';
   CTX.textBaseline = 'alphabetic';
