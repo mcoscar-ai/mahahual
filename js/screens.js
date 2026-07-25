@@ -215,6 +215,25 @@ function drawSelectScreen() {
   CTX.font = 'bold ' + Math.round(CANVAS.height * 0.062) + 'px sans-serif';
   CTX.fillText('Elige tu guardián', CANVAS.width / 2, CANVAS.height * 0.085);
 
+  // ── Botão de voltar ao menu principal ───────────────────────
+  var pad = Math.round(CANVAS.height * 0.025);
+  var btnV = Math.round(CANVAS.height * 0.075);
+  CTX.fillStyle = 'rgba(12, 45, 22, 0.72)';
+  hudRoundRect(CTX, pad, pad, btnV, btnV, btnV / 2);
+  CTX.fill();
+  // seta pra esquerda
+  CTX.strokeStyle = '#ffd75e';
+  CTX.lineWidth = Math.max(3, CANVAS.height * 0.007);
+  CTX.beginPath();
+  CTX.moveTo(pad + btnV * 0.62, pad + btnV * 0.28);
+  CTX.lineTo(pad + btnV * 0.36, pad + btnV * 0.5);
+  CTX.lineTo(pad + btnV * 0.62, pad + btnV * 0.72);
+  CTX.stroke();
+  addButton(pad, pad, btnV, btnV, function () {
+    if (typeof SELECT_DESTINO !== 'undefined') SELECT_DESTINO = 'zone';
+    GAME.state = 'title';
+  });
+
   // ── Linha de dificuldade ────────────────────────────────────
   // Não se aplica ao Relámpago (não tem inimigos) — some nesse fluxo.
   if (typeof SELECT_DESTINO === 'undefined' || (SELECT_DESTINO !== 'relampago' && SELECT_DESTINO !== 'corrida')) {
