@@ -350,6 +350,11 @@ function gameLoop() {
     if (typeof updateBoss === 'function') updateBoss();
     if (typeof updateNuvens === 'function') updateNuvens();
     checkZoneEnd();
+  } else if (GAME.state === 'relampago') {
+    updatePlayer();   // mesma física, sem inimigos/boss neste modo
+    updateCamera();
+    if (typeof updateItems === 'function') updateItems();
+    if (typeof updateRelampago === 'function') updateRelampago();
   } else {
     pollAdvanceInput();
   }
@@ -359,8 +364,11 @@ function gameLoop() {
     if (typeof drawPuzzle === 'function') drawPuzzle(CTX);
   } else if (GAME.state === 'playing') {
     render(GAME.zone);
+  } else if (GAME.state === 'relampago') {
+    render('relampago');
+    if (typeof drawRelampagoHUD === 'function') drawRelampagoHUD(CTX);
   } else if (typeof drawScreen === 'function' && drawScreen()) {
-    // screens.js desenhou a tela atual (title/select/zone_complete/win)
+    // screens.js desenhou a tela atual (title/select/zone_complete/win/relampago_result)
   } else {
     render(GAME.zone);
     drawTransitionScreen(); // fallback provisório
