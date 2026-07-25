@@ -18,8 +18,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 var RELAMPAGO_DURACAO = 90 * 60;   // 90s a 60fps
-var RELAMPAGO_WORLD_SCREENS = 12;  // mundo fechado — criança vai e volta
-var RELAMPAGO_ALVO_ITENS = 80;     // lixos simultâneos no mapa (nunca esgota)
+var RELAMPAGO_WORLD_SCREENS = 25;  // mundo grande pra criança explorar
+var RELAMPAGO_ALVO_ITENS = 200;    // lixos simultâneos — bem cheio
 
 var RELAMPAGO = { timer: 0, score: 0 };
 
@@ -69,8 +69,8 @@ function spawnRelampagoItems(worldWidth) {
 
   while (pos < limite) {
     criarLixoRelampago(pos);
-    // Espaçamento denso: ~80 itens no mapa de 12 telas
-    pos += larguraTela * (0.12 + Math.random() * 0.08);
+    // Espaçamento bem apertado: lixo quase um do lado do outro
+    pos += larguraTela * (0.06 + Math.random() * 0.06);
   }
 }
 
@@ -80,7 +80,7 @@ function spawnRelampagoItems(worldWidth) {
 // pra não aparecer "do nada" na cara da criança.
 function respawnRelampagoItem() {
   var larguraTela = CANVAS.width;
-  var margem = larguraTela * 1.5;  // distância mínima do jogador
+  var margem = larguraTela * 1.0;  // só fora da tela atual
   var tentativas = 0;
   var posX;
 
@@ -144,10 +144,10 @@ function updateRelampago() {
   if (P.x < 0) P.x = 0;
   if (P.x > WORLD_WIDTH) P.x = WORLD_WIDTH;
 
-  // Respawn contínuo: até 3 por frame pra repor rápido sem pico de CPU.
-  // Assim a criança nunca fica andando num mundo vazio.
+  // Respawn agressivo: até 6 por frame, repovoando rápido qualquer
+  // trecho que a criança limpou. Nunca anda num mundo vazio.
   var faltam = RELAMPAGO_ALVO_ITENS - ITENS.length;
-  for (var r = 0; r < Math.min(faltam, 3); r++) {
+  for (var r = 0; r < Math.min(faltam, 6); r++) {
     respawnRelampagoItem();
   }
 
