@@ -57,7 +57,8 @@ var ZONE_BACKGROUNDS = {
   1: 'bg_zona1',
   2: 'bg_zona2',
   3: 'bg_zona3',
-  relampago: 'bg_relampago'
+  relampago: 'bg_relampago',
+  corrida: 'bg_corrida'
 };
 
 // O FUNDO é a camada distante (montanhas/selva ao longe): rola devagar,
@@ -110,7 +111,9 @@ var GROUND_PALETTE = {
   2: { top: '#d8c79a', bottom: '#a68a58', edge: '#6f5a33', grass: '#5f8a3c', stone: '#a9a294' },
   3: { top: '#c4b18c', bottom: '#8e7852', edge: '#5c4a2c', grass: '#4f7a34', stone: '#9a9386' },
   // Areia clara da praia, casando com o fundo bg_relampago
-  relampago: { top: '#f2e3ae', bottom: '#dcc07f', edge: '#b08a4a', grass: '#8fae55', stone: '#f5efe0' }
+  relampago: { top: '#f2e3ae', bottom: '#dcc07f', edge: '#b08a4a', grass: '#8fae55', stone: '#f5efe0' },
+  // Terra avermelhada da selva noturna, casando com bg_corrida
+  corrida: { top: '#8b4e2a', bottom: '#5e3218', edge: '#3d200e', grass: '#3a6e2c', stone: '#6b5a4a' }
 };
 
 function drawGroundProp(sx, y, kind, pal, unit) {
