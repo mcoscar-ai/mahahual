@@ -185,14 +185,14 @@ function iniciarEncaixe(cfg) {
   var W = CANVAS.width, H = CANVAS.height;
   var nat = layoutNatural(cfg);
 
-  // Tabuleiro: cabe na altura disponível e sobra espaço pro modelo
-  var boardH = H * 0.44;
+  // Tabuleiro: ocupa mais da tela pra facilitar a visualização
+  var boardH = H * 0.56;
   var boardW = boardH * (nat.totalW / nat.totalH);
-  var maxW = W * 0.42;
+  var maxW = W * 0.52;
   if (boardW > maxW) { boardW = maxW; boardH = boardW * (nat.totalH / nat.totalW); }
 
-  var boardX = (W - boardW) / 2 - W * 0.14;
-  var boardY = H * 0.23;
+  var boardX = (W - boardW) / 2 - W * 0.12;
+  var boardY = H * 0.20;
   var escala = boardW / nat.totalW;   // arte original -> tela
 
   var pecas = [];
@@ -281,13 +281,20 @@ function iniciarMemorama(cfg) {
   var n = cartas.length;
   var linhas = (n <= 8) ? 2 : (n <= 12 ? 3 : 4);
   var cols = Math.ceil(n / linhas);
-  var gridH = H * 0.56;
+  var gridH = H * 0.68;
   var ch = gridH / linhas;
   var cw = ch * 0.82;
-  var gapX = W * 0.014, gapY = H * 0.022;
+  var gapX = W * 0.012, gapY = H * 0.018;
   var totalW = cols * cw + (cols - 1) * gapX;
+  // Se a grade ficou mais larga que a tela, reduz as cartas
+  var maxGridW = W * 0.92;
+  if (totalW > maxGridW) {
+    cw = (maxGridW - (cols - 1) * gapX) / cols;
+    ch = cw / 0.82;
+    totalW = cols * cw + (cols - 1) * gapX;
+  }
   var startX = (W - totalW) / 2;
-  var startY = H * 0.26;
+  var startY = H * 0.20;
 
   for (var c = 0; c < cartas.length; c++) {
     var col = c % cols, lin = Math.floor(c / cols);
