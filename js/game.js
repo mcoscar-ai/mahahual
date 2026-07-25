@@ -361,6 +361,8 @@ function gameLoop() {
     if (typeof updateBarris === 'function') updateBarris();
     if (typeof updatePlacas === 'function') updatePlacas();
     if (typeof updateCorrida === 'function') updateCorrida();
+  } else if (GAME.state === 'ninja_eco') {
+    if (typeof updateNinjaEco === 'function') updateNinjaEco();
   } else {
     pollAdvanceInput();
   }
@@ -376,6 +378,8 @@ function gameLoop() {
   } else if (GAME.state === 'corrida') {
     render('corrida');
     if (typeof drawCorridaHUD === 'function') drawCorridaHUD(CTX);
+  } else if (GAME.state === 'ninja_eco') {
+    if (typeof drawNinjaEco === 'function') drawNinjaEco(CTX);
   } else if (typeof drawScreen === 'function' && drawScreen()) {
     // screens.js desenhou a tela atual (title/select/zone_complete/win/relampago_result)
   } else {
