@@ -355,6 +355,12 @@ function gameLoop() {
     updateCamera();
     if (typeof updateItems === 'function') updateItems();
     if (typeof updateRelampago === 'function') updateRelampago();
+  } else if (GAME.state === 'corrida') {
+    updatePlayer();
+    updateCamera();
+    if (typeof updateBarris === 'function') updateBarris();
+    if (typeof updatePlacas === 'function') updatePlacas();
+    if (typeof updateCorrida === 'function') updateCorrida();
   } else {
     pollAdvanceInput();
   }
@@ -367,6 +373,9 @@ function gameLoop() {
   } else if (GAME.state === 'relampago') {
     render('relampago');
     if (typeof drawRelampagoHUD === 'function') drawRelampagoHUD(CTX);
+  } else if (GAME.state === 'corrida') {
+    render('corrida');
+    if (typeof drawCorridaHUD === 'function') drawCorridaHUD(CTX);
   } else if (typeof drawScreen === 'function' && drawScreen()) {
     // screens.js desenhou a tela atual (title/select/zone_complete/win/relampago_result)
   } else {
