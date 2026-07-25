@@ -149,6 +149,8 @@ function atualizarMusica() {
     case 'playing':       desejada = 'music_zone' + GAME.zone; break;
     case 'relampago':        desejada = 'music_zone1'; break;
     case 'relampago_result': desejada = 'music_intro'; break;
+    case 'corrida':          desejada = 'music_zone3'; break;
+    case 'corrida_result':   desejada = 'music_intro'; break;
     case 'menu_memoria':
     case 'menu_puzzle':   desejada = 'music_intro'; break;
     default:              return;
