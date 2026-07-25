@@ -18,7 +18,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 var RELAMPAGO_DURACAO = 90 * 60;   // 90s a 60fps
-var RELAMPAGO_WORLD_SCREENS = 9;   // mundo curto e fechado: dá pra ir e voltar
+var RELAMPAGO_WORLD_SCREENS = 12;  // mundo fechado — criança vai e volta
+var RELAMPAGO_ALVO_ITENS = 80;     // lixos simultâneos no mapa (nunca esgota)
 
 var RELAMPAGO = { timer: 0, score: 0 };
 
@@ -27,17 +28,39 @@ var RELAMPAGO = { timer: 0, score: 0 };
 // botão RELÁMPAGO no título). Lido/ajustado em screens.js.
 var SELECT_DESTINO = 'zone';
 
-// ── Distribuição de lixo — bem mais densa que numa zona normal ───
-// Mesma mecânica de items.js (mesmo array ITENS, mesma colisão, mesmo
-// desenho): só o espaçamento muda, pra virar uma correria de coleta
-// em vez de uma travessia longa.
+// ── Helper: cria UM lixo na posição X dada ──────────────────────
+// Reutilizado pelo spawn inicial e pelo respawn contínuo.
+// Proporção aérea mais alta que nas zonas normais: 65% flutua, 25%
+// na faixa alta (pulo duplo obrigatório) — é isso que dá desafio.
+function criarLixoRelampago(posX) {
+  var tipo = ITEM_TIPOS[Math.floor(Math.random() * ITEM_TIPOS.length)];
+  var sorteio = Math.random();
+  var flutua = (sorteio >= 0.35);        // 65% flutuam (era 55%)
+  var alto = (sorteio >= 0.75);          // 25% são altos (era 20%)
+  var alturaVoo = 0;
+  if (flutua && typeof JUMP_FORCE_1 !== 'undefined' && typeof GRAVITY !== 'undefined') {
+    var apice = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
+    alturaVoo = apice * (alto ? (1.05 + Math.random() * 0.35)
+                              : (0.45 + Math.random() * 0.35));
+  }
+  ITENS.push({
+    x: Math.round(posX),
+    y: Math.round(GROUND_Y - alturaVoo),
+    tipo: tipo,
+    frame: Math.floor(Math.random() * ITEM_FRAMES),
+    frameTimer: Math.floor(Math.random() * 10),
+    bobPhase: Math.random() * Math.PI * 2,
+    flutua: flutua,
+    alto: alto,
+    coletado: false
+  });
+}
+
+// ── Distribuição inicial de lixo ────────────────────────────────
 function spawnRelampagoItems(worldWidth) {
   ITENS.length = 0;
   ITEM_POPUPS.length = 0;
 
-  // Mesma armadilha do drone/lixo aéreo: física só ganha escala
-  // dentro de updatePhysicsScale(). Sem isto o lixo alto nasce em
-  // altura absoluta e fica inalcançável no celular.
   if (typeof updatePhysicsScale === 'function') updatePhysicsScale();
 
   var larguraTela = CANVAS.width;
@@ -45,35 +68,29 @@ function spawnRelampagoItems(worldWidth) {
   var limite = worldWidth - larguraTela * 0.5;
 
   while (pos < limite) {
-    var tipo = ITEM_TIPOS[Math.floor(Math.random() * ITEM_TIPOS.length)];
-
-    // Mesmas três faixas de altura do items.js (chão / médio / alto),
-    // só que aqui quase metade flutua — "lixo em todas as alturas".
-    var sorteio = Math.random();
-    var flutua = (sorteio >= 0.45);
-    var alto = (sorteio >= 0.80);
-    var alturaVoo = 0;
-    if (flutua && typeof JUMP_FORCE_1 !== 'undefined' && typeof GRAVITY !== 'undefined') {
-      var apice = (JUMP_FORCE_1 * JUMP_FORCE_1) / (2 * GRAVITY);
-      alturaVoo = apice * (alto ? (1.05 + Math.random() * 0.35)
-                                : (0.45 + Math.random() * 0.35));
-    }
-
-    ITENS.push({
-      x: Math.round(pos),
-      y: Math.round(GROUND_Y - alturaVoo),
-      tipo: tipo,
-      frame: Math.floor(Math.random() * ITEM_FRAMES),
-      frameTimer: Math.floor(Math.random() * 10),
-      bobPhase: Math.random() * Math.PI * 2,
-      flutua: flutua,
-      alto: alto,
-      coletado: false
-    });
-
-    // Bem mais junto que nas zonas normais (lá: 0.34-0.62 telas).
-    pos += larguraTela * (0.14 + Math.random() * 0.10);
+    criarLixoRelampago(pos);
+    // Espaçamento denso: ~80 itens no mapa de 12 telas
+    pos += larguraTela * (0.12 + Math.random() * 0.08);
   }
+}
+
+// ── Respawn contínuo: garante que nunca falta lixo ──────────────
+// Chamado por updateRelampago() a cada frame. Se ITENS.length caiu
+// abaixo do alvo, nasce lixo novo em posições fora da tela atual,
+// pra não aparecer "do nada" na cara da criança.
+function respawnRelampagoItem() {
+  var larguraTela = CANVAS.width;
+  var margem = larguraTela * 1.5;  // distância mínima do jogador
+  var tentativas = 0;
+  var posX;
+
+  // Tenta até 20x achar uma posição longe do jogador e dentro do mapa
+  do {
+    posX = larguraTela * 0.5 + Math.random() * (WORLD_WIDTH - larguraTela);
+    tentativas++;
+  } while (Math.abs(posX - P.x) < margem && tentativas < 20);
+
+  criarLixoRelampago(posX);
 }
 
 // ── Início da fase ────────────────────────────────────────────
@@ -126,6 +143,13 @@ function updateRelampago() {
   // só os limites do mapa.
   if (P.x < 0) P.x = 0;
   if (P.x > WORLD_WIDTH) P.x = WORLD_WIDTH;
+
+  // Respawn contínuo: até 3 por frame pra repor rápido sem pico de CPU.
+  // Assim a criança nunca fica andando num mundo vazio.
+  var faltam = RELAMPAGO_ALVO_ITENS - ITENS.length;
+  for (var r = 0; r < Math.min(faltam, 3); r++) {
+    respawnRelampagoItem();
+  }
 
   RELAMPAGO.timer--;
   if (RELAMPAGO.timer <= 0) {
