@@ -19,7 +19,7 @@ var NINJAECO_NIVEIS = 10;             // total de níveis da fase
 var NINJAECO_TRANSICAO_DURACAO = 90;  // 1,5s de tela "¡Nivel X!" entre níveis
 var NINJAECO_VALOR_LIXO = 30;         // por corte de lixo
 var NINJAECO_PENALIDADE_ANIMAL = 40;  // perdido ao cortar um animal
-var NINJAECO_GRAVITY_BASE = 0.34;     // fração da altura do canvas/frame²
+var NINJAECO_GRAVITY_BASE = 0.18;     // gravidade suave — itens sobem alto e descem devagar
 
 // Animais "não corte" — reaproveita os PNGs limpos do memorama
 var NINJAECO_ANIMAIS = [
@@ -35,7 +35,7 @@ var NINJA_SPAWN_TIMER = 0;
 
 // ── Rastro do corte (trilha do dedo/mouse) ───────────────────────
 var NINJA_TRAIL = [];      // { x, y, t }
-var NINJA_TRAIL_MS = 140;  // quanto tempo cada ponto some (esmaecendo)
+var NINJA_TRAIL_MS = 200;  // quanto tempo cada ponto some (esmaecendo) — generoso pra crianças
 var NINJA_ARRASTANDO = false;
 
 // ── Dificuldade progressiva: nível 1 (fácil) → nível 10 (rápido) ──
@@ -44,11 +44,11 @@ function ninjaDificuldade(nivel) {
   var t = Math.max(0, Math.min(1, (nivel - 1) / (NINJAECO_NIVEIS - 1)));
   var lerp = function (a, b) { return a + (b - a) * t; };
   return {
-    spawnMin: Math.round(lerp(34, 16, t)),
-    spawnMax: Math.round(lerp(54, 30, t)),
+    spawnMin: Math.round(lerp(44, 20, t)),
+    spawnMax: Math.round(lerp(64, 34, t)),
     levaMax: Math.round(lerp(2, 4, t)),      // leva = 1..levaMax itens por spawn
-    animalProb: lerp(0.12, 0.22, t),
-    velMult: lerp(1.0, 1.6, t)
+    animalProb: lerp(0.10, 0.20, t),
+    velMult: lerp(1.0, 1.5, t)
   };
 }
 
@@ -60,12 +60,12 @@ function criarNinjaItem() {
   var ehAnimal = Math.random() < dif.animalProb;
 
   var x = W * (0.12 + Math.random() * 0.76);
-  var apiceAlvo = H * (0.28 + Math.random() * 0.34); // altura que o item deve alcançar
+  var apiceAlvo = H * (0.55 + Math.random() * 0.30); // sobe quase até o topo da tela
   var g = NINJAECO_GRAVITY_BASE * (H / 1080) * dif.velMult;
   var vy = -Math.sqrt(2 * g * apiceAlvo);
-  var vx = (Math.random() - 0.5) * W * 0.006 * dif.velMult;
+  var vx = (Math.random() - 0.5) * W * 0.004 * dif.velMult;
 
-  var raio = H * (ehAnimal ? 0.055 : 0.045);
+  var raio = H * (ehAnimal ? 0.09 : 0.08);
 
   var img;
   if (ehAnimal) {
@@ -284,7 +284,7 @@ function drawNinjaEcoTrail(ctx) {
     if (alpha <= 0) continue;
     ctx.globalAlpha = alpha * 0.9;
     ctx.strokeStyle = '#eafff2';
-    ctx.lineWidth = Math.max(2, CANVAS.height * 0.014 * alpha);
+    ctx.lineWidth = Math.max(4, CANVAS.height * 0.022 * alpha);
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
